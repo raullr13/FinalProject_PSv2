@@ -1,0 +1,3 @@
+ID,PatientID,Date,Symptoms,Diagnosis,Treatment
+1,1,2023-10-15,"Fever, cough, fatigue","Viral Infection","Rest, hydration, Ibuprofen"
+2,1,2024-02-10,"Mild chest pain, shortness of breath","Bronchitis","Antibiotics course for 7 days"

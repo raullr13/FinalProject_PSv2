@@ -35,20 +35,16 @@ public class AdminPresenter {
             view.displayUsers(allUsersCache);
         } else {
             List<UserDTO> filtered = allUsersCache.stream()
-                    // CORECTURĂ: Am adăugat .name() pentru a transforma Enum-ul în String
                     .filter(u -> u.getRole() != null && u.getRole().name().equalsIgnoreCase(selectedRole))
                     .collect(java.util.stream.Collectors.toList());
             view.displayUsers(filtered);
         }
     }
 
-    // --- CERINȚA: EXPORT ÎN FORMAT CSV ---
     public void onExportCsvClicked(String filePath) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
-            // Scriere Header CSV
             writer.println("ID,Username,Role,Email");
 
-            // Scriere date utilizatori
             for (UserDTO u : allUsersCache) {
                 writer.println(u.getId() + "," + u.getUsername() + "," + u.getRole() + "," + u.getEmail());
             }
@@ -58,7 +54,6 @@ public class AdminPresenter {
         }
     }
 
-    // --- CERINȚA: CRUD - ADĂUGARE UTILIZATOR ---
     public void onAddUserClicked(String username, String password, String role, String email) {
         if (username.trim().isEmpty() || password.trim().isEmpty() || email.trim().isEmpty()) {
             view.showMessage("Toate câmpurile sunt obligatorii!");
@@ -68,7 +63,7 @@ public class AdminPresenter {
         boolean success = userDAO.insertUser(username, password, role, email);
         if (success) {
             view.showMessage("Utilizatorul '" + username + "' a fost adăugat cu succes în baza de date.");
-            loadUsers(); // Refresh tabel
+            loadUsers();
         } else {
             view.showMessage("Eroare: Nu s-a putut adăuga utilizatorul. Verificați dacă username-ul este duplicat.");
         }

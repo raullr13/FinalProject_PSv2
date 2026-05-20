@@ -9,7 +9,6 @@ import java.util.List;
 
 public class SqlConsultationDAO implements IConsultationDAO {
 
-    // Adăugăm metoda vitală pentru Medic: extrage doar consultațiile PROPRIILOR pacienți
     public List<ConsultationDTO> getConsultationsByDoctorId(int doctorId) {
         List<ConsultationDTO> list = new ArrayList<>();
         String query = "SELECT * FROM Consultations WHERE doctor_id = ?";
@@ -29,7 +28,6 @@ public class SqlConsultationDAO implements IConsultationDAO {
         return list;
     }
 
-    // Metoda existentă actualizată pentru PatientPortal
     public List<ConsultationDTO> getConsultationsByPatientId(int patientId) {
         List<ConsultationDTO> list = new ArrayList<>();
         String query = "SELECT * FROM Consultations WHERE patient_id = ?";
@@ -47,7 +45,6 @@ public class SqlConsultationDAO implements IConsultationDAO {
         return list;
     }
 
-    // Acum suportă doctor_id la inserare
     @Override
     public boolean save(ConsultationDTO consultation) {
         String query = "INSERT INTO Consultations (patient_id, doctor_id, consultation_date, symptoms, diagnosis, treatment) VALUES (?, ?, ?, ?, ?, ?)";
@@ -66,7 +63,7 @@ public class SqlConsultationDAO implements IConsultationDAO {
         }
     }
 
-    // Acum permite Medicului să actualizeze simptomele, diagnosticul și tratamentul (Cerința din PDF!)
+    //permite Medicului să actualizeze simptomele, diagnosticul și tratamentul
     @Override
     public boolean update(ConsultationDTO consultation) {
         String query = "UPDATE Consultations SET symptoms = ?, diagnosis = ?, treatment = ? WHERE id = ? AND doctor_id = ?";
@@ -97,7 +94,7 @@ public class SqlConsultationDAO implements IConsultationDAO {
         }
     }
 
-    // Helper method to keep code clean
+    // Helper method
     private ConsultationDTO mapResultSetToDTO(ResultSet rs) throws SQLException {
         return new ConsultationDTO(
                 rs.getInt("id"),
@@ -110,7 +107,6 @@ public class SqlConsultationDAO implements IConsultationDAO {
         );
     }
 
-    // Implement methods from interface (returning empty lists/null if unused, or full implementations)
     @Override
     public List<ConsultationDTO> findAll() { return new ArrayList<>(); }
 

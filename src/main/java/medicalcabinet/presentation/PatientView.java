@@ -11,9 +11,6 @@ import java.util.List;
 public class PatientView extends JFrame implements IPatientView {
     private PatientPresenter presenter;
 
-    // Get the Singleton instance
-    private I18nManager i18n = I18nManager.getInstance();
-
     private JTextField searchField;
     private JButton searchButton;
     private JButton updateButton;
@@ -22,7 +19,6 @@ public class PatientView extends JFrame implements IPatientView {
     private JButton medicalRecordButton;
     private JButton demographicsButton;
     private JButton auditButton;
-
     private JLabel searchLabel;
 
     private JTable patientTable;
@@ -33,15 +29,19 @@ public class PatientView extends JFrame implements IPatientView {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
+        // Language Panel
+        JButton btnRo = new JButton("RO");
         JButton btnEn = new JButton("EN");
         JButton btnFr = new JButton("FR");
-        JButton btnEs = new JButton("ES"); // Changed to ES
+        JButton btnEs = new JButton("ES");
 
+        btnRo.addActionListener(e -> changeLanguage("ro", "RO"));
         btnEn.addActionListener(e -> changeLanguage("en", "US"));
         btnFr.addActionListener(e -> changeLanguage("fr", "FR"));
-        btnEs.addActionListener(e -> changeLanguage("es", "ES")); // Changed to Spanish Locale
+        btnEs.addActionListener(e -> changeLanguage("es", "ES"));
 
         JPanel langPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        langPanel.add(btnRo);
         langPanel.add(btnEn);
         langPanel.add(btnFr);
         langPanel.add(btnEs);
@@ -54,20 +54,20 @@ public class PatientView extends JFrame implements IPatientView {
         topPanel.add(searchLabel);
         topPanel.add(searchField);
         topPanel.add(searchButton);
-        topPanel.add(langPanel); // Add language buttons to the top right
+        topPanel.add(langPanel);
 
         tableModel = new DefaultTableModel(new String[]{"", "", "", ""}, 0);
         patientTable = new JTable(tableModel);
         patientTable.setDefaultEditor(Object.class, null);
         JScrollPane scrollPane = new JScrollPane(patientTable);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Patient List"));
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Lista Pacienți"));
 
         addButton = new JButton();
         updateButton = new JButton();
         deleteButton = new JButton();
         medicalRecordButton = new JButton();
         demographicsButton = new JButton();
-        auditButton = new JButton("Run Data Audit"); // Or Directory (Plugin)
+        auditButton = new JButton("Run Data Audit");
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.add(auditButton);
@@ -100,33 +100,32 @@ public class PatientView extends JFrame implements IPatientView {
         setLocationRelativeTo(null);
     }
 
-    // --- Helper Methods for i18n ---
 
     private void changeLanguage(String lang, String country) {
-        i18n.setLocale(lang, country);
+        I18nManager.setLocale(lang, country);
         updateUITexts();
     }
 
     private void updateUITexts() {
-        setTitle(i18n.getString("window.title"));
-        searchLabel.setText(i18n.getString("lbl.search_name"));
-        searchButton.setText(i18n.getString("btn.search"));
-        addButton.setText(i18n.getString("btn.add"));
-        updateButton.setText(i18n.getString("btn.update"));
-        deleteButton.setText(i18n.getString("btn.delete"));
-        medicalRecordButton.setText(i18n.getString("btn.medical_record"));
-        demographicsButton.setText(i18n.getString("btn.demographics"));
+        setTitle(I18nManager.getString("window.title", "Gestionare Pacienți"));
+        searchLabel.setText(I18nManager.getString("lbl.search_name", "Caută Nume:"));
+        searchButton.setText(I18nManager.getString("btn.search", "Caută"));
+        addButton.setText(I18nManager.getString("btn.add", "Adaugă Pacient"));
+        updateButton.setText(I18nManager.getString("btn.update", "Actualizează"));
+        deleteButton.setText(I18nManager.getString("btn.delete", "Șterge"));
+        medicalRecordButton.setText(I18nManager.getString("btn.medical_record", "Fișă Medicală"));
+        demographicsButton.setText(I18nManager.getString("btn.demographics", "Demografice"));
 
         String[] columns = {
-                i18n.getString("table.id"),
-                i18n.getString("table.name"),
-                i18n.getString("table.cnp"),
-                i18n.getString("table.age")
+                I18nManager.getString("table.id", "ID"),
+                I18nManager.getString("table.name", "Nume Complet"),
+                I18nManager.getString("table.cnp", "CNP"),
+                I18nManager.getString("table.age", "Vârstă")
         };
         tableModel.setColumnIdentifiers(columns);
     }
 
-    // --- Interface Methods (RESTORED) ---
+    // --- Interface Methods ---
 
     @Override
     public void setPresenter(PatientPresenter presenter) {
@@ -140,7 +139,6 @@ public class PatientView extends JFrame implements IPatientView {
 
     @Override
     public PatientDTO showPatientFormDialog(PatientDTO patientToEdit) {
-        // This hooks back into your actual PatientDialog window
         PatientDialog dialog = new PatientDialog(this, patientToEdit);
         dialog.setVisible(true);
         if (dialog.isApproved()) {
@@ -153,17 +151,16 @@ public class PatientView extends JFrame implements IPatientView {
     public PatientDTO getSelectedPatient() {
         int selectedRow = patientTable.getSelectedRow();
         if (selectedRow >= 0) {
-            // Extract the data from the selected row in the JTable
-            int id = (int) tableModel.getValueAt(selectedRow, 0);
-            String name = (String) tableModel.getValueAt(selectedRow, 1);
-            String cnp = (String) tableModel.getValueAt(selectedRow, 2);
-            int age = (int) tableModel.getValueAt(selectedRow, 3);
+            int id = Integer.parseInt(tableModel.getValueAt(selectedRow, 0).toString());
+            String name = tableModel.getValueAt(selectedRow, 1).toString();
+            String cnp = tableModel.getValueAt(selectedRow, 2).toString();
+            int age = Integer.parseInt(tableModel.getValueAt(selectedRow, 3).toString());
 
             PatientDTO patient = new PatientDTO();
+            patient.setId(id);
             patient.setFullName(name);
             patient.setCnp(cnp);
             patient.setAge(age);
-            patient.setId(id);
 
             return patient;
         }
@@ -172,10 +169,7 @@ public class PatientView extends JFrame implements IPatientView {
 
     @Override
     public void displayPatients(List<PatientDTO> patients) {
-        // Clear the existing table data
         tableModel.setRowCount(0);
-
-        // Populate the table with the new data from the backend
         if (patients != null) {
             for (PatientDTO p : patients) {
                 tableModel.addRow(new Object[]{p.getId(), p.getFullName(), p.getCnp(), p.getAge()});

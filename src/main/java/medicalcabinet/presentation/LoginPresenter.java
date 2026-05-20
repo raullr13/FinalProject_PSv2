@@ -22,13 +22,11 @@ public class LoginPresenter {
         }
 
         try {
-            // Attempt to authenticate via the REST Client
             UserDTO loggedInUser = authClient.authenticate(username, password);
 
             view.showMessage("Login Successful! Welcome " + loggedInUser.getRole().name());
             view.closeView();
 
-            // Route to the correct Dashboard based on Role
             routeUserToDashboard(loggedInUser);
 
         } catch (Exception e) {
@@ -57,7 +55,6 @@ public class LoginPresenter {
                 doctorView.setVisible(true);
                 break;
             case PATIENT:
-                // Deschide Portalul real al Pacientului cu MVP complet
                 PatientPortalView portalView = new PatientPortalView();
                 PatientPortalPresenter portalPresenter = new PatientPortalPresenter(portalView, user);
                 portalView.setPresenter(portalPresenter);

@@ -2,6 +2,7 @@ package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.ConsultationDTO;
 import medicalcabinet.domain.dtos.PatientDTO;
+import medicalcabinet.presentation.utils.I18nManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -14,50 +15,102 @@ public class PatientPortalView extends JFrame {
     private JLabel nameLabel;
     private JLabel cnpLabel;
     private JLabel ageLabel;
-
+    private JPanel infoPanel;
+    private JPanel centerPanel;
     private JTable historyTable;
     private DefaultTableModel tableModel;
     private JButton exportBtn;
 
+    private PatientDTO currentPatient;
+
     public PatientPortalView() {
-        setTitle("Cabinet Medical - Portal Pacient");
-        setSize(750, 450);
+        setSize(800, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
-        // Panel de sus: Datele Personale ale Pacientului
-        JPanel infoPanel = new JPanel(new GridLayout(3, 1, 5, 5));
-        infoPanel.setBorder(BorderFactory.createTitledBorder("Date Personale Pacient"));
-        nameLabel = new JLabel("Nume: Încărcare...");
-        cnpLabel = new JLabel("CNP: Încărcare...");
-        ageLabel = new JLabel("Vârstă: Încărcare...");
+        JPanel topContainer = new JPanel(new BorderLayout());
+
+        infoPanel = new JPanel(new GridLayout(3, 1, 5, 5));
+        nameLabel = new JLabel();
+        cnpLabel = new JLabel();
+        ageLabel = new JLabel();
         infoPanel.add(nameLabel);
         infoPanel.add(cnpLabel);
         infoPanel.add(ageLabel);
-        add(infoPanel, BorderLayout.NORTH);
+        topContainer.add(infoPanel, BorderLayout.CENTER);
 
-        // Panel Central: Tabelul cu Consultații (Fișa Medicală)
-        String[] columns = {"Dată", "Simptome", "Diagnostic", "Tratament"};
-        tableModel = new DefaultTableModel(columns, 0);
+        JPanel langPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnRo = new JButton("RO");
+        JButton btnEn = new JButton("EN");
+        JButton btnFr = new JButton("FR");
+        JButton btnEs = new JButton("ES");
+
+        btnRo.addActionListener(e -> changeLanguage("ro", "RO"));
+        btnEn.addActionListener(e -> changeLanguage("en", "US"));
+        btnFr.addActionListener(e -> changeLanguage("fr", "FR"));
+        btnEs.addActionListener(e -> changeLanguage("es", "ES"));
+
+        langPanel.add(btnRo);
+        langPanel.add(btnEn);
+        langPanel.add(btnFr);
+        langPanel.add(btnEs);
+        topContainer.add(langPanel, BorderLayout.EAST);
+
+        add(topContainer, BorderLayout.NORTH);
+
+        tableModel = new DefaultTableModel(0, 4) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
         historyTable = new JTable(tableModel);
 
-        JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setBorder(BorderFactory.createTitledBorder("Istoricul tău Medical (Consultații)"));
+        centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(new JScrollPane(historyTable), BorderLayout.CENTER);
         add(centerPanel, BorderLayout.CENTER);
 
-        // Panel de jos: Buton Export Word
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        exportBtn = new JButton("Salvează fișa în Word (.doc)");
+        exportBtn = new JButton();
         bottomPanel.add(exportBtn);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // Eveniment Buton
         exportBtn.addActionListener(e -> {
             if (presenter != null) presenter.onExportToWordClicked();
         });
 
+        updateLanguageTexts();
+
         setLocationRelativeTo(null);
+    }
+
+    private void changeLanguage(String lang, String country) {
+        I18nManager.setLocale(lang, country);
+        updateLanguageTexts();
+        if (currentPatient != null) {
+            displayPatientInfo(currentPatient);
+        }
+    }
+
+    private void updateLanguageTexts() {
+        setTitle(I18nManager.getString("portal.title", "Cabinet Medical - Portal Pacient"));
+
+        infoPanel.setBorder(BorderFactory.createTitledBorder(I18nManager.getString("portal.personal_data", "Date Personale Pacient")));
+        centerPanel.setBorder(BorderFactory.createTitledBorder(I18nManager.getString("portal.history", "Istoricul tău Medical (Consultații)")));
+
+        if(currentPatient == null) {
+            nameLabel.setText(I18nManager.getString("portal.name", "Nume:") + " " + I18nManager.getString("portal.loading", "Încărcare..."));
+            cnpLabel.setText(I18nManager.getString("portal.cnp", "CNP:") + " " + I18nManager.getString("portal.loading", "Încărcare..."));
+            ageLabel.setText(I18nManager.getString("portal.age", "Vârstă:") + " " + I18nManager.getString("portal.loading", "Încărcare..."));
+        }
+
+        exportBtn.setText(I18nManager.getString("portal.export_doc", "Salvează fișa în Word (.doc)"));
+
+        String[] columns = {
+                I18nManager.getString("portal.col.date", "Dată"),
+                I18nManager.getString("portal.col.symp", "Simptome"),
+                I18nManager.getString("portal.col.diag", "Diagnostic"),
+                I18nManager.getString("portal.col.treat", "Tratament")
+        };
+        tableModel.setColumnIdentifiers(columns);
     }
 
     public void setPresenter(PatientPortalPresenter presenter) {
@@ -65,9 +118,10 @@ public class PatientPortalView extends JFrame {
     }
 
     public void displayPatientInfo(PatientDTO patient) {
-        nameLabel.setText("Nume Complet: " + patient.getFullName());
-        cnpLabel.setText("CNP: " + patient.getCnp());
-        ageLabel.setText("Vârstă: " + patient.getAge() + " ani");
+        this.currentPatient = patient;
+        nameLabel.setText(I18nManager.getString("portal.name_full", "Nume Complet:") + " " + patient.getFullName());
+        cnpLabel.setText(I18nManager.getString("portal.cnp", "CNP:") + " " + patient.getCnp());
+        ageLabel.setText(I18nManager.getString("portal.age", "Vârstă:") + " " + patient.getAge() + " " + I18nManager.getString("portal.years", "ani"));
     }
 
     public void displayMedicalHistory(List<ConsultationDTO> history) {

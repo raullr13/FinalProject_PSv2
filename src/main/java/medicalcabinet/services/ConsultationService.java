@@ -14,12 +14,10 @@ public class ConsultationService {
         this.consultationDAO = consultationDAO;
     }
 
-    // --- For the Patient Portal ---
     public List<ConsultationDTO> getPatientMedicalRecord(int patientId) {
         return consultationDAO.getConsultationsByPatientId(patientId);
     }
 
-    // --- NEW: For the Doctor Dashboard ---
     public List<ConsultationDTO> getDoctorConsultations(int doctorId) {
         return consultationDAO.getConsultationsByDoctorId(doctorId);
     }
@@ -30,11 +28,11 @@ public class ConsultationService {
     }
 
     public boolean updateConsultation(ConsultationDTO consultation) {
-        return consultationDAO.update(consultation); // Changed from updateConsultation
+        return consultationDAO.update(consultation);
     }
 
     public boolean deleteConsultation(int id) {
-        return consultationDAO.delete(id); // Changed from deleteConsultation
+        return consultationDAO.delete(id);
     }
 
     public List<ConsultationDTO> filterDoctorConsultations(int doctorId, String filterDiagnosis, String filterTreatment) {
@@ -52,7 +50,6 @@ public class ConsultationService {
         // Get all consultations for this specific patient
         List<ConsultationDTO> patientConsultations = consultationDAO.getConsultationsByPatientId(patientId);
 
-        // Filter them dynamically based on the provided inputs
         return patientConsultations.stream()
                 .filter(c -> date == null || c.getConsultationDate().equals(date))
                 .filter(c -> diagnosis == null || diagnosis.trim().isEmpty() ||

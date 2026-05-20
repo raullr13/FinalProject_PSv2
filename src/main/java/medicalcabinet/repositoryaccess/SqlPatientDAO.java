@@ -9,17 +9,14 @@ import java.util.List;
 
 public class SqlPatientDAO implements IPatientDAO {
 
-    // --- ALIAS PENTRU PREZENTATOR (Rezolvă eroarea cu findAll) ---
     public List<PatientDTO> findAll() {
         return getAllPatients();
     }
 
-    // --- ALIAS PENTRU PREZENTATOR (Rezolvă eroarea cu save) ---
     public boolean save(PatientDTO patient) {
         return insertPatient(patient);
     }
 
-    // --- ALIAS PENTRU PREZENTATOR (Rezolvă eroarea cu delete) ---
     public boolean delete(int id) {
         return deletePatient(id);
     }
@@ -66,7 +63,6 @@ public class SqlPatientDAO implements IPatientDAO {
 
     @Override
     public boolean insertPatient(PatientDTO patient) {
-        // Încercăm ambele variante de denumiri de coloane prin coincidență structurală standard
         String sql = "INSERT INTO Patients (full_name, cnp, age) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -77,7 +73,6 @@ public class SqlPatientDAO implements IPatientDAO {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            // Fallback în caz că baza de date are neapărat majuscule în schema veche
             String fallbackSql = "INSERT INTO Patients (FullName, CNP, Age) VALUES (?, ?, ?)";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(fallbackSql)) {
@@ -171,7 +166,6 @@ public class SqlPatientDAO implements IPatientDAO {
         return null;
     }
 
-    // Helper inteligent care citește indiferent dacă în MySQL coloana e scrisă cu litere mari sau mici
     private PatientDTO mapResultSetToDTO(ResultSet rs) throws SQLException {
         int id;
         try { id = rs.getInt("id"); } catch (SQLException e) { id = rs.getInt("Id"); }

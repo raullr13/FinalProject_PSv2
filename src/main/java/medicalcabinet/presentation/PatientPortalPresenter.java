@@ -30,14 +30,10 @@ public class PatientPortalPresenter {
     }
 
     public void loadMedicalRecord() {
-        // 1. Căutăm pacientul în baza de date folosind username-ul contului logat
         this.patientInfo = patientDAO.getPatientByUsername(loggedInUser.getUsername());
 
         if (patientInfo != null) {
-            // 2. Extragem istoricul complet de consultații din tabela medicală
             this.medicalHistory = consultationDAO.getConsultationsByPatientId(patientInfo.getId());
-
-            // 3. Trimitem datele reale către ferestrele din UI
             view.displayPatientInfo(patientInfo);
             view.displayMedicalHistory(medicalHistory);
         } else {
@@ -51,11 +47,9 @@ public class PatientPortalPresenter {
             return;
         }
 
-        // Generăm un nume unic pentru fișier bazat pe numele pacientului
         String fileName = "Fisa_Medicala_" + patientInfo.getFullName().replace(" ", "_") + ".doc";
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(fileName))) {
-            // Generăm structura fizică a documentului Word (.doc)
             writer.println("FIȘĂ MEDICALĂ PACIENT");
             writer.println("==================================================");
             writer.println("Nume Complet: " + patientInfo.getFullName());

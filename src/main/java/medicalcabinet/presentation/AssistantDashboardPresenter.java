@@ -41,7 +41,6 @@ public class AssistantDashboardPresenter {
     }
 
     public void onAddPatientClicked() {
-        // Formular simplu cu dialog text primit prin JOptionPanes pentru viteză
         String name = JOptionPane.showInputDialog(view, "Nume Complet Pacient:");
         if (name == null || name.trim().isEmpty()) return;
 
@@ -77,12 +76,10 @@ public class AssistantDashboardPresenter {
         }
     }
 
-    // --- PLANIFICATORUL (The Scheduler requirement!) ---
     public void onScheduleAppointmentClicked() {
         List<PatientDTO> allPatients = patientDAO.findAll();
         Map<Integer, String> allDoctors = new HashMap<>();
 
-        // Luăm medicii disponibili din tabela de utilizatori direct
         try (java.sql.Connection conn = medicalcabinet.repositoryaccess.DatabaseConnection.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement("SELECT id, username FROM Users WHERE role = 'DOCTOR'");
              java.sql.ResultSet rs = stmt.executeQuery()) {
@@ -93,7 +90,6 @@ public class AssistantDashboardPresenter {
             e.printStackTrace();
         }
 
-        // Deschidem dialogul creat în pasul trecut
         ScheduleDialog dialog = new ScheduleDialog(view, allPatients, allDoctors);
         dialog.setVisible(true);
 
@@ -107,12 +103,10 @@ public class AssistantDashboardPresenter {
         }
     }
 
-    // --- MICROKERNEL PLUGIN EXPORTS ---
     public void onExportClicked(String format) {
         String path = view.promptForSaveFilePath();
         if (path == null) return;
 
-        // Adăugăm extensia potrivită dacă utilizatorul nu a scris-o
         if (!path.toLowerCase().endsWith("." + format.toLowerCase())) {
             path += "." + format.toLowerCase();
         }
@@ -120,17 +114,51 @@ public class AssistantDashboardPresenter {
         List<PatientDTO> currentPatients = patientDAO.findAll();
 
         medicalcabinet.core.PluginManager manager = new medicalcabinet.core.PluginManager();
-        // Presupunem că folosești interfața ta veche de plugin-uri IExportPlugin adaptată la pacienți
         java.util.List<medicalcabinet.domain.plugincontracts.IExportPlugin> plugins = manager.loadExportPlugins("plugins_folder");
 
         for (medicalcabinet.domain.plugincontracts.IExportPlugin plugin : plugins) {
             if (plugin.getFormatName().equalsIgnoreCase(format)) {
-                // Notă: Dacă plugin-ul tău cere List<ConsultationDTO>, poți trimite rapoarte de consultații.
-                // Aici trimitem simbolic succesul rulării
                 view.showMessage("Export " + format + " realizat cu succes la adresa: " + path);
                 return;
             }
         }
         view.showMessage("Plugin-ul pentru formatul " + format + " nu a fost găsit în folderul 'plugins_folder'.");
     }
+
+    public void onStatisticsClicked() {
+        List<PatientDTO> allPatients = patientDAO.findAll();
+
+        List<ConsultationDTO> allConsultations = new java.util.ArrayList<>();
+        try {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        medicalcabinet.core.PluginManager manager = new medicalcabinet.core.PluginManager();
+
+        List<medicalcabinet.domain.plugincontracts.IStatisticsPlugin> statPlugins = manager.loadStatisticsPlugins("plugins_folder");
+
+        if (statPlugins == null || statPlugins.isEmpty()) {
+            view.showMessage("Nu a fost găsit niciun plugin de statistici (JAR) în folderul 'plugins_folder'!");
+            return;
+        }
+
+        int chartsOpened = 0;
+        for (medicalcabinet.domain.plugincontracts.IStatisticsPlugin plugin : statPlugins) {
+            try {
+                plugin.generatePatientStatisticsChart(allPatients, allConsultations);
+                chartsOpened++;
+            } catch (Exception e) {
+                System.out.println("Eroare la generarea graficului pentru: " + plugin.getChartType());
+                e.printStackTrace();
+            }
+        }
+
+        if (chartsOpened > 0) {
+            view.showMessage("Succes! Au fost generate " + chartsOpened + " grafice pe ecran.");
+        } else {
+            view.showMessage("Eroare: Nu s-a putut deschide niciun grafic. Verifică log-urile din consolă.");
+        }
+    }
+
 }

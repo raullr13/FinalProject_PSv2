@@ -146,7 +146,7 @@ public class ConsultationView extends JDialog implements IConsultationView {
             }
             return path;
         }
-        return null; // User canceled the save dialog
+        return null;
     }
 
     @Override

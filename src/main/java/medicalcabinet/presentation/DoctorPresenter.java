@@ -29,25 +29,21 @@ public class DoctorPresenter {
     }
 
     public void loadAllMyPatients() {
-        // Fetch only this doctor's records using the method we just built
         currentDoctorConsultations = consultationService.getDoctorConsultations(loggedInDoctor.getId());
         updateViewTable(currentDoctorConsultations);
     }
 
-    // --- BULLET POINT 2: FILTER BY DIAGNOSIS / TREATMENT ---
     public void onFilterClicked(String diagnosis, String treatment) {
         List<ConsultationDTO> filtered = consultationService.filterDoctorConsultations(loggedInDoctor.getId(), diagnosis, treatment);
         updateViewTable(filtered);
     }
 
-    // --- BULLET POINT 3: SEARCH BY PATIENT NAME ---
     public void onSearchClicked(String patientName) {
         if (patientName == null || patientName.trim().isEmpty()) {
             loadAllMyPatients();
             return;
         }
 
-        // We filter the already loaded consultations by matching the patient's ID to their name
         List<ConsultationDTO> searched = currentDoctorConsultations.stream()
                 .filter(c -> {
                     PatientDTO p = patientDAO.findById(c.getPatientId());
@@ -62,7 +58,6 @@ public class DoctorPresenter {
         }
     }
 
-    // --- BULLET POINT 1: UPDATE RECORD ---
     public void onUpdateRecordClicked(int consultationId, String newSymptoms, String newDiagnosis, String newTreatment) {
         ConsultationDTO toUpdate = new ConsultationDTO();
         toUpdate.setId(consultationId);
@@ -73,13 +68,12 @@ public class DoctorPresenter {
 
         if (consultationService.updateConsultation(toUpdate)) {
             view.showMessage("Fișa medicală a fost actualizată cu succes!");
-            loadAllMyPatients(); // Refresh table
+            loadAllMyPatients();
         } else {
             view.showMessage("Eroare la actualizarea fișei.");
         }
     }
 
-    // Helper method to send data to the View, replacing Patient IDs with actual Names for display
     private void updateViewTable(List<ConsultationDTO> consultations) {
         Object[][] tableData = new Object[consultations.size()][6];
 

@@ -19,7 +19,6 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
-        // Top Panel: Filtering by Role
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         topPanel.setBorder(BorderFactory.createTitledBorder("Filtrare Utilizatori"));
         topPanel.add(new JLabel("Alege Tip Utilizator:"));
@@ -28,7 +27,6 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         topPanel.add(roleFilterCombo);
         add(topPanel, BorderLayout.NORTH);
 
-        // Center Table
         String[] columns = {"ID", "Username", "Role", "Email"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -37,7 +35,6 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         userTable = new JTable(tableModel);
         add(new JScrollPane(userTable), BorderLayout.CENTER);
 
-        // Buttons Panel
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton exportBtn = new JButton("Export to CSV");
         JButton notifyBtn = new JButton("Notify User (Email/SMS)");
@@ -50,9 +47,6 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         bottomPanel.add(deleteBtn);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // --- Action Listeners ---
-
-        // Filter Action
         roleFilterCombo.addActionListener(e -> {
             if (presenter != null) {
                 presenter.onFilterRoleChanged((String) roleFilterCombo.getSelectedItem());

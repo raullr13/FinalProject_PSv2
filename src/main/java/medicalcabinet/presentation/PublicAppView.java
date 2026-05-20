@@ -23,7 +23,7 @@ public class PublicAppView extends JFrame implements IPublicView {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Top Panel: Search & Login
+        // Top Panel
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         searchField = new JTextField(15);
         JButton searchBtn = new JButton("Search Doctor");
@@ -36,23 +36,20 @@ public class PublicAppView extends JFrame implements IPublicView {
         topPanel.add(loginBtn);
         add(topPanel, BorderLayout.NORTH);
 
-        // Center Panel: Split into three columns
+        // Center Panel
         JPanel centerPanel = new JPanel(new GridLayout(1, 3, 10, 10));
         centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Column 1: Specializations
         specModel = new DefaultListModel<>();
         specList = new JList<>(specModel);
         specList.setBorder(BorderFactory.createTitledBorder("Specializations"));
         centerPanel.add(new JScrollPane(specList));
 
-        // Column 2: Doctors List
         doctorModel = new DefaultListModel<>();
         doctorList = new JList<>(doctorModel);
         doctorList.setBorder(BorderFactory.createTitledBorder("Doctors"));
         centerPanel.add(new JScrollPane(doctorList));
 
-        // Column 3: Doctor Details (CV, Schedule)
         detailsArea = new JTextArea();
         detailsArea.setEditable(false);
         detailsArea.setBorder(BorderFactory.createTitledBorder("Doctor Details"));
@@ -60,39 +57,29 @@ public class PublicAppView extends JFrame implements IPublicView {
 
         add(centerPanel, BorderLayout.CENTER);
 
-        // --- Action Listeners ---
-
-        // When clicking a specialization, load doctors
         specList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && specList.getSelectedValue() != null) {
                 presenter.onSpecializationSelected(specList.getSelectedValue());
             }
         });
 
-        // When clicking a doctor, show CV details
         doctorList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && doctorList.getSelectedValue() != null) {
                 displayDoctorDetails(doctorList.getSelectedValue());
             }
         });
 
-        // Search Button
         searchBtn.addActionListener(e -> presenter.onSearchClicked());
 
-        // Login Button - Opens your existing Auth system!
         loginBtn.addActionListener(e -> {
-            this.dispose(); // Close the public view
+            this.dispose();
 
-            // 1. Create the View
             LoginView loginView = new LoginView();
 
-            // 2. Create the Auth Client (so the presenter can talk to the backend/database)
             medicalcabinet.services.AuthRestClient authClient = new medicalcabinet.services.AuthRestClient();
 
-            // 3. Pass BOTH the view and the client into the Presenter
             LoginPresenter loginPresenter = new LoginPresenter(loginView, authClient);
 
-            // 4. Link it up and show it!
             loginView.setPresenter(loginPresenter);
             loginView.setVisible(true);
         });
@@ -114,7 +101,7 @@ public class PublicAppView extends JFrame implements IPublicView {
     public void displayDoctors(List<DoctorDTO> doctors) {
         doctorModel.clear();
         for (DoctorDTO d : doctors) doctorModel.addElement(d);
-        detailsArea.setText(""); // Clear details
+        detailsArea.setText(""); // Clear
     }
 
     @Override

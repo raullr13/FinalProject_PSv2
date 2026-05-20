@@ -21,7 +21,6 @@ public class PatientDialog extends JDialog {
 
         this.patient = patientToEdit;
 
-        // --- Form Panel ---
         JPanel formPanel = new JPanel(new GridLayout(3, 2, 5, 5));
         formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -39,7 +38,6 @@ public class PatientDialog extends JDialog {
 
         add(formPanel, BorderLayout.CENTER);
 
-        // --- Button Panel ---
         JPanel buttonPanel = new JPanel();
         JButton saveButton = new JButton("Save");
         JButton cancelButton = new JButton("Cancel");
@@ -50,7 +48,6 @@ public class PatientDialog extends JDialog {
                 String cnp = cnpField.getText();
                 int age = Integer.parseInt(ageField.getText());
 
-                // If it's a new patient, create a new DTO. If editing, update the existing one.
                 if (patient == null) {
                     patient = new PatientDTO();
                 } else {
@@ -60,7 +57,7 @@ public class PatientDialog extends JDialog {
                 }
 
                 approved = true;
-                setVisible(false); // Close the dialog
+                setVisible(false);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Age must be a valid number!");
             }
@@ -68,7 +65,7 @@ public class PatientDialog extends JDialog {
 
         cancelButton.addActionListener(e -> {
             approved = false;
-            setVisible(false); // Close the dialog without saving
+            setVisible(false);
         });
 
         buttonPanel.add(saveButton);
@@ -76,7 +73,6 @@ public class PatientDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    // These are the methods PatientView is looking for!
     public boolean isApproved() {
         return approved;
     }

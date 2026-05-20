@@ -21,7 +21,6 @@ class SmsNotificationService implements INotificationChannel {
     }
 }
 
-// 4. Clasa principală PUBLICĂ (care dă și numele fișierului: UserNotificationManager.java)
 public class UserNotificationManager {
     private final INotificationChannel emailService = new EmailNotificationService();
     private final INotificationChannel smsService = new SmsNotificationService();

@@ -73,13 +73,12 @@ public class ScheduleDialog extends JDialog {
                 return;
             }
 
-            // Creăm DTO-ul cu ID 0 (va fi generat de MySQL) și câmpuri medicale goale
             result = new ConsultationDTO(
                     0,
                     selectedPatient.id,
                     selectedDoctor.id,
                     date,
-                    "", "", "" // Goale, așteaptă ca medicul să le completeze!
+                    "", "", ""
             );
             dispose();
 

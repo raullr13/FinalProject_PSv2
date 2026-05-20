@@ -82,7 +82,7 @@ public class ConsultationPresenter {
         view.displayConsultations(list);
     }
 
-    // --- MICROKERNEL PLUGIN INTEGRATION ---
+    // Microkernel Plugins Dependencies
 
     public void onExportCsvClicked() {
         handleExport("CSV", ".csv");
@@ -94,11 +94,10 @@ public class ConsultationPresenter {
 
     private void handleExport(String formatName, String extension) {
         String path = view.promptForSaveFilePath(extension);
-        if (path == null) return; // User canceled the save dialog
+        if (path == null) return;
 
         List<ConsultationDTO> currentConsultations = service.getPatientMedicalRecord(patientId);
 
-        // Dynamically load the Export plugins from the folder
         medicalcabinet.core.PluginManager manager = new medicalcabinet.core.PluginManager();
         List<IExportPlugin> plugins = manager.loadExportPlugins("plugins_folder");
 
@@ -123,13 +122,11 @@ public class ConsultationPresenter {
             return;
         }
 
-        // Dynamically load the Statistics plugins from the folder
         medicalcabinet.core.PluginManager manager = new medicalcabinet.core.PluginManager();
         List<IStatisticsPlugin> statPlugins = manager.loadStatisticsPlugins("plugins_folder");
 
         boolean pluginFound = false;
         for (IStatisticsPlugin plugin : statPlugins) {
-            // Specifically look for the Diagnosis Bar Chart plugin
             if (plugin.getChartType().contains("Diagnosis") || plugin.getChartType().contains("Bar Chart")) {
                 plugin.generatePatientStatisticsChart(null, currentConsultations);
                 pluginFound = true;

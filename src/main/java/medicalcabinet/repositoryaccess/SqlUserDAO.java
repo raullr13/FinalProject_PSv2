@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SqlUserDAO {
-    // Uses your existing DatabaseConnection class
     private Connection getConnection() throws SQLException {
         return DatabaseConnection.getConnection();
     }

@@ -42,7 +42,6 @@ public class LoginView extends JFrame implements ILoginView {
         buttonPanel.add(loginButton);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Wire up the button
         loginButton.addActionListener(e -> {
             if (presenter != null) presenter.onLoginClicked();
         });

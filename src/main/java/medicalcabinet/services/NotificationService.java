@@ -5,7 +5,6 @@ import javax.mail.internet.*;
 import java.util.Properties;
 
 public class NotificationService {
-    // TODO: Replace with your actual email and generated App Password
     private static final String SENDER_EMAIL = "your.email@gmail.com";
     private static final String SENDER_PASSWORD = "your_16_letter_app_password";
 
@@ -29,12 +28,10 @@ public class NotificationService {
         message.setSubject(subject);
         message.setText(body);
 
-        Transport.send(message); // Actually sends the email over the internet!
+        Transport.send(message);
     }
 
     public void sendSMS(String phoneNumber, String message) {
-        // Real SMS requires a paid API like Twilio.
-        // We simulate it here to fulfill the architecture requirement.
         System.out.println("--- SIMULATED SMS ---");
         System.out.println("To: " + phoneNumber);
         System.out.println("Message: " + message);

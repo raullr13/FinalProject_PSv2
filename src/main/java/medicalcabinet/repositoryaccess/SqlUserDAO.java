@@ -48,4 +48,23 @@ public class SqlUserDAO {
             return false;
         }
     }
+
+    public boolean insertUser(String username, String password, String role, String email) {
+        String query = "INSERT INTO Users (username, password, role, email) VALUES (?, ?, ?, ?)";
+
+        try (java.sql.Connection conn = DatabaseConnection.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            stmt.setString(3, role); // Salvează valoarea (ex: "DOCTOR") ca text
+            stmt.setString(4, email);
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

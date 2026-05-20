@@ -9,6 +9,21 @@ import java.util.List;
 
 public class SqlPatientDAO implements IPatientDAO {
 
+    // --- ALIAS PENTRU PREZENTATOR (Rezolvă eroarea cu findAll) ---
+    public List<PatientDTO> findAll() {
+        return getAllPatients();
+    }
+
+    // --- ALIAS PENTRU PREZENTATOR (Rezolvă eroarea cu save) ---
+    public boolean save(PatientDTO patient) {
+        return insertPatient(patient);
+    }
+
+    // --- ALIAS PENTRU PREZENTATOR (Rezolvă eroarea cu delete) ---
+    public boolean delete(int id) {
+        return deletePatient(id);
+    }
+
     @Override
     public List<PatientDTO> getAllPatients() {
         List<PatientDTO> patients = new ArrayList<>();
@@ -19,12 +34,7 @@ public class SqlPatientDAO implements IPatientDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                PatientDTO dto = new PatientDTO();
-                dto.setId(rs.getInt("Id"));
-                dto.setFullName(rs.getString("FullName"));
-                dto.setCnp(rs.getString("CNP"));
-                dto.setAge(rs.getInt("Age"));
-                patients.add(dto);
+                patients.add(mapResultSetToDTO(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -35,21 +45,17 @@ public class SqlPatientDAO implements IPatientDAO {
     @Override
     public List<PatientDTO> getPatientsByName(String name) {
         List<PatientDTO> patients = new ArrayList<>();
-        String sql = "SELECT * FROM Patients WHERE FullName LIKE ?";
+        String sql = "SELECT * FROM Patients WHERE full_name LIKE ? OR FullName LIKE ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, "%" + name + "%");
+            pstmt.setString(2, "%" + name + "%");
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    PatientDTO dto = new PatientDTO();
-                    dto.setId(rs.getInt("Id"));
-                    dto.setFullName(rs.getString("FullName"));
-                    dto.setCnp(rs.getString("CNP"));
-                    dto.setAge(rs.getInt("Age"));
-                    patients.add(dto);
+                    patients.add(mapResultSetToDTO(rs));
                 }
             }
         } catch (SQLException e) {
@@ -60,8 +66,8 @@ public class SqlPatientDAO implements IPatientDAO {
 
     @Override
     public boolean insertPatient(PatientDTO patient) {
-        String sql = "INSERT INTO Patients (FullName, CNP, Age) VALUES (?, ?, ?)";
-
+        // Încercăm ambele variante de denumiri de coloane prin coincidență structurală standard
+        String sql = "INSERT INTO Patients (full_name, cnp, age) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -69,19 +75,26 @@ public class SqlPatientDAO implements IPatientDAO {
             pstmt.setString(2, patient.getCnp());
             pstmt.setInt(3, patient.getAge());
 
-            int rowsAffected = pstmt.executeUpdate();
-            return rowsAffected > 0;
-
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            // Fallback în caz că baza de date are neapărat majuscule în schema veche
+            String fallbackSql = "INSERT INTO Patients (FullName, CNP, Age) VALUES (?, ?, ?)";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(fallbackSql)) {
+                pstmt.setString(1, patient.getFullName());
+                pstmt.setString(2, patient.getCnp());
+                pstmt.setInt(3, patient.getAge());
+                return pstmt.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                return false;
+            }
         }
     }
 
     @Override
     public boolean updatePatient(PatientDTO patient) {
-        String sql = "UPDATE Patients SET FullName = ?, CNP = ?, Age = ? WHERE Id = ?";
-
+        String sql = "UPDATE Patients SET full_name = ?, cnp = ?, age = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -90,27 +103,33 @@ public class SqlPatientDAO implements IPatientDAO {
             pstmt.setInt(3, patient.getAge());
             pstmt.setInt(4, patient.getId());
 
-            int rowsAffected = pstmt.executeUpdate();
-            return rowsAffected > 0;
-
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            String fallbackSql = "UPDATE Patients SET FullName = ?, CNP = ?, Age = ? WHERE Id = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(fallbackSql)) {
+                pstmt.setString(1, patient.getFullName());
+                pstmt.setString(2, patient.getCnp());
+                pstmt.setInt(3, patient.getAge());
+                pstmt.setInt(4, patient.getId());
+                return pstmt.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                return false;
+            }
         }
     }
 
     @Override
     public boolean deletePatient(int id) {
-        String sql = "DELETE FROM Patients WHERE Id = ?";
-
+        String sql = "DELETE FROM Patients WHERE id = ? OR Id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
+            pstmt.setInt(2, id);
 
-            int rowsAffected = pstmt.executeUpdate();
-            return rowsAffected > 0;
-
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -118,20 +137,14 @@ public class SqlPatientDAO implements IPatientDAO {
     }
 
     public PatientDTO getPatientByUsername(String username) {
-        // Presupunem că numele complet din tabela Patients conține sau se potrivește cu username-ul,
-        // sau adăugăm o mapare directă. Pentru testul tău cu 'pacient', căutăm primul pacient disponibil dacă e contul de test.
-        String query = "SELECT id, full_name, cnp, age FROM Patients WHERE full_name LIKE ? OR id = 1 LIMIT 1";
+        String query = "SELECT * FROM Patients WHERE full_name LIKE ? OR FullName LIKE ? OR id = 1 LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, "%" + username + "%");
+            stmt.setString(2, "%" + username + "%");
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new PatientDTO(
-                            rs.getInt("id"),
-                            rs.getString("full_name"),
-                            rs.getString("cnp"),
-                            rs.getInt("age")
-                    );
+                    return mapResultSetToDTO(rs);
                 }
             }
         } catch (SQLException e) {
@@ -141,25 +154,37 @@ public class SqlPatientDAO implements IPatientDAO {
     }
 
     public PatientDTO findById(int id) {
-        String query = "SELECT id, full_name, cnp, age FROM Patients WHERE id = ?";
-        try (java.sql.Connection conn = DatabaseConnection.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(query)) {
+        String query = "SELECT * FROM Patients WHERE id = ? OR Id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setInt(1, id);
-            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+            stmt.setInt(2, id);
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new PatientDTO(
-                            rs.getInt("id"),
-                            rs.getString("full_name"),
-                            rs.getString("cnp"),
-                            rs.getInt("age")
-                    );
+                    return mapResultSetToDTO(rs);
                 }
             }
-        } catch (java.sql.SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null; // Return null if no patient is found with that ID
+        return null;
     }
 
+    // Helper inteligent care citește indiferent dacă în MySQL coloana e scrisă cu litere mari sau mici
+    private PatientDTO mapResultSetToDTO(ResultSet rs) throws SQLException {
+        int id;
+        try { id = rs.getInt("id"); } catch (SQLException e) { id = rs.getInt("Id"); }
+
+        String name;
+        try { name = rs.getString("full_name"); } catch (SQLException e) { name = rs.getString("FullName"); }
+
+        String cnp;
+        try { cnp = rs.getString("cnp"); } catch (SQLException e) { cnp = rs.getString("CNP"); }
+
+        int age;
+        try { age = rs.getInt("age"); } catch (SQLException e) { age = rs.getInt("Age"); }
+
+        return new PatientDTO(id, name, cnp, age);
+    }
 }

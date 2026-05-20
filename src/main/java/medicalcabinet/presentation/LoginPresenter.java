@@ -39,19 +39,10 @@ public class LoginPresenter {
     private void routeUserToDashboard(UserDTO user) {
         switch (user.getRole()) {
             case ASSISTANT:
-                PatientView patientView = new PatientView();
-
-                // 1. Setup the "Backend Server"
-                medicalcabinet.repositoryaccess.SqlPatientDAO patientDAO = new medicalcabinet.repositoryaccess.SqlPatientDAO();
-                medicalcabinet.services.PatientService patientService = new medicalcabinet.services.PatientService(patientDAO);
-
-                // 2. Setup the "Network Layer"
-                medicalcabinet.network.PatientRestClient restClient = new medicalcabinet.network.PatientRestClient(patientService);
-
-                // 3. Inject into Presenter
-                PatientPresenter patientPresenter = new PatientPresenter(patientView, restClient);
-                patientView.setPresenter(patientPresenter);
-                patientView.setVisible(true);
+                AssistantDashboardView assistantView = new AssistantDashboardView();
+                AssistantDashboardPresenter assistantPresenter = new AssistantDashboardPresenter(assistantView);
+                assistantView.setPresenter(assistantPresenter);
+                assistantView.setVisible(true);
                 break;
             case ADMINISTRATOR:
                 AdminDashboardView adminView = new AdminDashboardView();

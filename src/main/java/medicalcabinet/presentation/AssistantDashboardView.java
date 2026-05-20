@@ -189,10 +189,11 @@ public class AssistantDashboardView extends JFrame {
         patientActionPanel.setBorder(BorderFactory.createTitledBorder(I18nManager.getString("ast.management", "Management Pacienți")));
         addPatientBtn.setText(I18nManager.getString("ast.btn_add", "Adaugă Pacient Nou"));
         deletePatientBtn.setText(I18nManager.getString("ast.btn_delete", "Șterge Pacient Selectat"));
-        scheduleBtn.setText("📅 " + I18nManager.getString("ast.btn_schedule", "Programează Consultație Nouă"));
+        scheduleBtn.setText(I18nManager.getString("ast.btn_schedule", "Programează Consultație Nouă"));
+        statsBtn = new JButton("Generează Grafice (Statistici)");
 
         // Traducerea butonului de statistici
-        statsBtn.setText("📊 " + I18nManager.getString("ast.btn_stats", "Generează Grafice (Statistici)"));
+        statsBtn.setText("Generate charts (Statistici)");
 
         exportActionPanel.setBorder(BorderFactory.createTitledBorder(I18nManager.getString("ast.export", "Export Date (Microkernel Plugins)")));
         exportCsvBtn.setText(I18nManager.getString("ast.btn_csv", "Export CSV"));

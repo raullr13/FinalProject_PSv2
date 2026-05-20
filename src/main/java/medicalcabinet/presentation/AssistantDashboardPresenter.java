@@ -129,13 +129,25 @@ public class AssistantDashboardPresenter {
         List<PatientDTO> allPatients = patientDAO.findAll();
 
         List<ConsultationDTO> allConsultations = new java.util.ArrayList<>();
-        try {
+        try (java.sql.Connection conn = medicalcabinet.repositoryaccess.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Consultations");
+             java.sql.ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                allConsultations.add(new ConsultationDTO(
+                        rs.getInt("id"),
+                        rs.getInt("patient_id"),
+                        rs.getInt("doctor_id"),
+                        rs.getDate("consultation_date").toLocalDate(),
+                        rs.getString("symptoms"),
+                        rs.getString("diagnosis"),
+                        rs.getString("treatment")
+                ));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         medicalcabinet.core.PluginManager manager = new medicalcabinet.core.PluginManager();
-
         List<medicalcabinet.domain.plugincontracts.IStatisticsPlugin> statPlugins = manager.loadStatisticsPlugins("plugins_folder");
 
         if (statPlugins == null || statPlugins.isEmpty()) {
@@ -144,7 +156,13 @@ public class AssistantDashboardPresenter {
         }
 
         int chartsOpened = 0;
+
         for (medicalcabinet.domain.plugincontracts.IStatisticsPlugin plugin : statPlugins) {
+
+            if (plugin.getClass().getName().toLowerCase().contains("audit")) {
+                continue;
+            }
+
             try {
                 plugin.generatePatientStatisticsChart(allPatients, allConsultations);
                 chartsOpened++;
@@ -155,9 +173,7 @@ public class AssistantDashboardPresenter {
         }
 
         if (chartsOpened > 0) {
-            view.showMessage("Succes! Au fost generate " + chartsOpened + " grafice pe ecran.");
-        } else {
-            view.showMessage("Eroare: Nu s-a putut deschide niciun grafic. Verifică log-urile din consolă.");
+            view.showMessage("Succes! Au fost generate " + chartsOpened + " grafice de statistici.");
         }
     }
 

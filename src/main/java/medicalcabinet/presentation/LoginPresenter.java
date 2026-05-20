@@ -60,13 +60,16 @@ public class LoginPresenter {
                 adminView.setVisible(true);
                 break;
             case DOCTOR:
-                // Doctor gets the Medical Records Update Dashboard
-                DoctorDashboardView doctorView = new DoctorDashboardView();
+                DoctorDashboardView doctorView = new DoctorDashboardView(user.getUsername());
+                DoctorPresenter doctorPresenter = new DoctorPresenter(doctorView, user);
+                doctorView.setPresenter(doctorPresenter);
                 doctorView.setVisible(true);
                 break;
             case PATIENT:
-                // Patient gets a highly restricted view of their own data
-                PatientPortalView portalView = new PatientPortalView(user.getUsername());
+                // Deschide Portalul real al Pacientului cu MVP complet
+                PatientPortalView portalView = new PatientPortalView();
+                PatientPortalPresenter portalPresenter = new PatientPortalPresenter(portalView, user);
+                portalView.setPresenter(portalPresenter);
                 portalView.setVisible(true);
                 break;
         }

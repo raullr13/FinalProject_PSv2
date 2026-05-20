@@ -8,6 +8,17 @@ public class PatientDTO {
     private String cnp;
     private int age;
 
+    public PatientDTO() {
+    }
+
+    public PatientDTO(int id, String fullName, String cnp, int age) {
+        this.id = id;
+        this.fullName = fullName;
+        this.cnp = cnp;
+        this.age = age;
+    }
+
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public String getFullName() { return fullName; }

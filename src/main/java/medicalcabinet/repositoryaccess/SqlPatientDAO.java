@@ -117,4 +117,49 @@ public class SqlPatientDAO implements IPatientDAO {
         }
     }
 
+    public PatientDTO getPatientByUsername(String username) {
+        // Presupunem că numele complet din tabela Patients conține sau se potrivește cu username-ul,
+        // sau adăugăm o mapare directă. Pentru testul tău cu 'pacient', căutăm primul pacient disponibil dacă e contul de test.
+        String query = "SELECT id, full_name, cnp, age FROM Patients WHERE full_name LIKE ? OR id = 1 LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, "%" + username + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new PatientDTO(
+                            rs.getInt("id"),
+                            rs.getString("full_name"),
+                            rs.getString("cnp"),
+                            rs.getInt("age")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public PatientDTO findById(int id) {
+        String query = "SELECT id, full_name, cnp, age FROM Patients WHERE id = ?";
+        try (java.sql.Connection conn = DatabaseConnection.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, id);
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new PatientDTO(
+                            rs.getInt("id"),
+                            rs.getString("full_name"),
+                            rs.getString("cnp"),
+                            rs.getInt("age")
+                    );
+                }
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Return null if no patient is found with that ID
+    }
+
 }

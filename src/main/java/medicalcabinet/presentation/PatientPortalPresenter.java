@@ -3,8 +3,10 @@ package medicalcabinet.presentation;
 import medicalcabinet.domain.dtos.ConsultationDTO;
 import medicalcabinet.domain.dtos.PatientDTO;
 import medicalcabinet.domain.dtos.UserDTO;
-import medicalcabinet.repositoryaccess.SqlConsultationDAO;
-import medicalcabinet.repositoryaccess.SqlPatientDAO;
+
+// 1. SWAPPED IMPORTS: No more java.sql or DAO!
+import medicalcabinet.services.PatientRestClient;
+import medicalcabinet.services.ConsultationRestClient;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,29 +19,33 @@ public class PatientPortalPresenter {
     private PatientDTO patientInfo;
     private List<ConsultationDTO> medicalHistory;
 
-    private SqlPatientDAO patientDAO;
-    private SqlConsultationDAO consultationDAO;
+    // 2. SWAPPED VARIABLES
+    private PatientRestClient patientClient;
+    private ConsultationRestClient consultationClient;
 
     public PatientPortalPresenter(PatientPortalView view, UserDTO loggedInUser) {
         this.view = view;
         this.loggedInUser = loggedInUser;
-        this.patientDAO = new SqlPatientDAO();
-        this.consultationDAO = new SqlConsultationDAO();
+
+        // 3. SWAPPED INSTANTIATION
+        this.patientClient = new PatientRestClient();
+        this.consultationClient = new ConsultationRestClient();
 
         loadMedicalRecord();
     }
 
     public void loadMedicalRecord() {
-        this.patientInfo = patientDAO.getPatientByUsername(loggedInUser.getUsername());
+        this.patientInfo = patientClient.getPatientById(loggedInUser.getId());
 
         if (patientInfo != null) {
-            this.medicalHistory = consultationDAO.getConsultationsByPatientId(patientInfo.getId());
+            this.medicalHistory = consultationClient.getConsultationsByPatientId(patientInfo.getId());
             view.displayPatientInfo(patientInfo);
             view.displayMedicalHistory(medicalHistory);
         } else {
             view.showMessage("Eroare: Nu s-a găsit nicio fișă medicală asociată utilizatorului '" + loggedInUser.getUsername() + "'.");
         }
     }
+
 
     public void onExportToWordClicked() {
         if (patientInfo == null || medicalHistory == null) {
@@ -77,4 +83,5 @@ public class PatientPortalPresenter {
             view.showMessage("Eroare la scrierea fișierului Word: " + e.getMessage());
         }
     }
+
 }

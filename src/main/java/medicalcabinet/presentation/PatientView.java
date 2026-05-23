@@ -23,13 +23,13 @@ public class PatientView extends JFrame implements IPatientView {
 
     private JTable patientTable;
     private DefaultTableModel tableModel;
+    private JScrollPane scrollPane;
 
     public PatientView() {
         setSize(850, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
-        // Language Panel
         JButton btnRo = new JButton("RO");
         JButton btnEn = new JButton("EN");
         JButton btnFr = new JButton("FR");
@@ -59,15 +59,15 @@ public class PatientView extends JFrame implements IPatientView {
         tableModel = new DefaultTableModel(new String[]{"", "", "", ""}, 0);
         patientTable = new JTable(tableModel);
         patientTable.setDefaultEditor(Object.class, null);
-        JScrollPane scrollPane = new JScrollPane(patientTable);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Lista Pacienți"));
+
+        scrollPane = new JScrollPane(patientTable);
 
         addButton = new JButton();
         updateButton = new JButton();
         deleteButton = new JButton();
         medicalRecordButton = new JButton();
         demographicsButton = new JButton();
-        auditButton = new JButton("Run Data Audit");
+        auditButton = new JButton();
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.add(auditButton);
@@ -86,7 +86,6 @@ public class PatientView extends JFrame implements IPatientView {
         add(scrollPane, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // Action Listeners
         searchButton.addActionListener(e -> { if (presenter != null) presenter.onSearchButtonClicked(); });
         addButton.addActionListener(e -> { if (presenter != null) presenter.onAddPatientClicked(); });
         updateButton.addActionListener(e -> { if (presenter != null) presenter.onUpdatePatientClicked(); });
@@ -99,7 +98,6 @@ public class PatientView extends JFrame implements IPatientView {
 
         setLocationRelativeTo(null);
     }
-
 
     private void changeLanguage(String lang, String country) {
         I18nManager.setLocale(lang, country);
@@ -115,6 +113,9 @@ public class PatientView extends JFrame implements IPatientView {
         deleteButton.setText(I18nManager.getString("btn.delete", "Șterge"));
         medicalRecordButton.setText(I18nManager.getString("btn.medical_record", "Fișă Medicală"));
         demographicsButton.setText(I18nManager.getString("btn.demographics", "Demografice"));
+        auditButton.setText(I18nManager.getString("btn.audit", "Run Data Audit"));
+
+        scrollPane.setBorder(BorderFactory.createTitledBorder(I18nManager.getString("border.patient_list", "Lista Pacienți")));
 
         String[] columns = {
                 I18nManager.getString("table.id", "ID"),
@@ -124,8 +125,6 @@ public class PatientView extends JFrame implements IPatientView {
         };
         tableModel.setColumnIdentifiers(columns);
     }
-
-    // --- Interface Methods ---
 
     @Override
     public void setPresenter(PatientPresenter presenter) {

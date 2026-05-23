@@ -1,9 +1,11 @@
 package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.UserDTO;
-import medicalcabinet.repositoryaccess.SqlUserDAO;
-import medicalcabinet.services.NotificationService;
+import medicalcabinet.domain.dtos.UserRole;
+import medicalcabinet.services.UserRestClient;
+import medicalcabinet.presentation.utils.I18nManager;
 
+import javax.swing.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,21 +14,17 @@ import java.util.stream.Collectors;
 
 public class AdminPresenter {
     private IAdminView view;
-    private NotificationService notificationService;
-    private SqlUserDAO userDAO;
-    private List<UserDTO> allUsersCache; // Păstrăm o listă locală pentru filtrare rapidă
+    private UserRestClient userClient;
+    private List<UserDTO> allUsersCache;
 
     public AdminPresenter(IAdminView view) {
         this.view = view;
-        this.notificationService = new NotificationService();
-        this.userDAO = new SqlUserDAO();
-
+        this.userClient = new UserRestClient();
         loadUsers();
     }
 
     public void loadUsers() {
-        // Fetch real data from MySQL
-        allUsersCache = userDAO.getAllUsers();
+        allUsersCache = userClient.getAllUsers();
         view.displayUsers(allUsersCache);
     }
 
@@ -36,7 +34,7 @@ public class AdminPresenter {
         } else {
             List<UserDTO> filtered = allUsersCache.stream()
                     .filter(u -> u.getRole() != null && u.getRole().name().equalsIgnoreCase(selectedRole))
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
             view.displayUsers(filtered);
         }
     }
@@ -44,102 +42,67 @@ public class AdminPresenter {
     public void onExportCsvClicked(String filePath) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
             writer.println("ID,Username,Role,Email");
-
             for (UserDTO u : allUsersCache) {
                 writer.println(u.getId() + "," + u.getUsername() + "," + u.getRole() + "," + u.getEmail());
             }
-            view.showMessage("Succes! Lista de utilizatori a fost exportată în: " + filePath);
+            view.showMessage(I18nManager.getString("admin.export.success", "Success!"));
         } catch (IOException e) {
-            view.showMessage("Eroare la exportul CSV: " + e.getMessage());
+            view.showMessage(I18nManager.getString("admin.export.error", "Error:") + e.getMessage());
         }
     }
 
     public void onAddUserClicked(String username, String password, String role, String email) {
         if (username.trim().isEmpty() || password.trim().isEmpty() || email.trim().isEmpty()) {
-            view.showMessage("Toate câmpurile sunt obligatorii!");
+            view.showMessage("Fields are required!");
             return;
         }
 
-        boolean success = userDAO.insertUser(username, password, role, email);
-        if (success) {
-            view.showMessage("Utilizatorul '" + username + "' a fost adăugat cu succes în baza de date.");
+        UserDTO newUser = new UserDTO(0, username, UserRole.valueOf(role.toUpperCase()), email);
+
+        if (userClient.saveUser(newUser)) {
             loadUsers();
-        } else {
-            view.showMessage("Eroare: Nu s-a putut adăuga utilizatorul. Verificați dacă username-ul este duplicat.");
         }
     }
 
     public void onNotifyClicked() {
         UserDTO selectedUser = view.getSelectedUser();
         if (selectedUser != null) {
-            try {
-                view.showMessage("Sending actual email to: " + selectedUser.getEmail() + "...");
-
-                String subject = "System Notification - Medical Cabinet";
-                String body = "Hello " + selectedUser.getUsername() + ",\n\nYour account details have been updated by the Administrator.";
-
-                // Real Email & Simulated SMS
-                notificationService.sendEmail(selectedUser.getEmail(), subject, body);
-                notificationService.sendSMS("0700000000", body);
-
-                view.showMessage("200 OK: Email and SMS dispatched successfully!");
-            } catch (Exception e) {
-                view.showMessage("Failed to send email: " + e.getMessage() + "\n(Did you configure your App Password in NotificationService?)");
+            if (userClient.triggerNotification(selectedUser.getId())) {
+                view.showMessage(I18nManager.getString("admin.notify.success", "Notification dispatched via server."));
+            } else {
+                view.showMessage(I18nManager.getString("admin.notify.fail", "Failed to dispatch notification."));
             }
         } else {
-            view.showMessage("Please select a user to notify.");
+            view.showMessage(I18nManager.getString("admin.select.error", "Please select a user."));
         }
     }
 
     public void onDeleteClicked() {
         UserDTO selected = view.getSelectedUser();
         if (selected != null) {
-            boolean success = userDAO.deleteUser(selected.getId());
-
-            if (success) {
-                view.showMessage("User deleted successfully from Database.");
+            if (userClient.deleteUser(selected.getId())) {
+                view.showMessage(I18nManager.getString("admin.delete.success", "User deleted."));
                 loadUsers();
             } else {
-                view.showMessage("Error: Could not delete user from Database.");
+                view.showMessage(I18nManager.getString("admin.delete.error", "Error deleting user."));
             }
         } else {
-            view.showMessage("Select a user to delete.");
+            view.showMessage(I18nManager.getString("admin.select.error", "Please select a user."));
         }
     }
 
     public void onUpdateUserClicked(String newUsername, String newPassword, String newRole, String newEmail) {
         UserDTO selectedUser = view.getSelectedUser();
+        if (selectedUser == null) return;
 
-        if (selectedUser == null) {
-            view.showMessage("Te rog să selectezi un utilizator din listă pentru a-l actualiza.");
-            return;
+        selectedUser.setUsername(newUsername);
+        if (!newPassword.isEmpty()) {
+            selectedUser.setPassword(newPassword);
         }
+        selectedUser.setRole(UserRole.valueOf(newRole.toUpperCase()));
+        selectedUser.setEmail(newEmail);
 
-        if (newUsername == null || newUsername.trim().isEmpty() ||
-                newEmail == null || newEmail.trim().isEmpty() ||
-                newRole == null || newRole.trim().isEmpty()) {
-            view.showMessage("Câmpurile username, rol și email sunt obligatorii!");
-            return;
-        }
-
-        boolean success = userDAO.updateUser(selectedUser.getId(), newUsername, newPassword, newRole, newEmail);
-
-        if (success) {
-            view.showMessage("Utilizatorul a fost actualizat cu succes!");
-            loadUsers();
-
-            medicalcabinet.services.UserNotificationManager notificationManager = new medicalcabinet.services.UserNotificationManager();
-
-            String changeDetails = "Username: " + newUsername + ", Rol: " + newRole;
-            if (newPassword != null && !newPassword.trim().isEmpty()) {
-                changeDetails += " (Parola a fost schimbată)";
-            }
-
-            notificationManager.notifyUserCredentialsChanged(newUsername, newEmail, changeDetails);
-
-        } else {
-            view.showMessage("Eroare la actualizarea utilizatorului în baza de date.");
-        }
+        userClient.updateUser(selectedUser);
+        loadUsers();
     }
-
 }

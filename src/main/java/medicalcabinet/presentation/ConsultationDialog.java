@@ -1,6 +1,8 @@
 package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.ConsultationDTO;
+import medicalcabinet.presentation.utils.I18nManager;
+
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
@@ -14,8 +16,15 @@ public class ConsultationDialog extends JDialog {
     private boolean isApproved = false;
     private ConsultationDTO resultDTO;
 
+    private JLabel lblDate;
+    private JLabel lblSymptoms;
+    private JLabel lblDiagnosis;
+    private JLabel lblTreatment;
+    private JButton saveBtn;
+    private JButton cancelBtn;
+
     public ConsultationDialog(Dialog parent, ConsultationDTO editData, int patientId) {
-        super(parent, editData == null ? "Add Consultation" : "Edit Consultation", true);
+        super(parent, editData == null ? I18nManager.getString("cons.diag.add", "Add Consultation") : I18nManager.getString("cons.diag.edit", "Edit Consultation"), true);
         setSize(400, 300);
         setLayout(new BorderLayout());
         setLocationRelativeTo(parent);
@@ -23,20 +32,24 @@ public class ConsultationDialog extends JDialog {
         JPanel form = new JPanel(new GridLayout(4, 2, 10, 15));
         form.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        form.add(new JLabel("Date (YYYY-MM-DD):"));
+        lblDate = new JLabel(I18nManager.getString("cons.diag.date", "Date (YYYY-MM-DD):"));
         dateField = new JTextField(LocalDate.now().toString());
+        form.add(lblDate);
         form.add(dateField);
 
-        form.add(new JLabel("Symptoms:"));
+        lblSymptoms = new JLabel(I18nManager.getString("cons.diag.symptoms", "Symptoms:"));
         symptomsField = new JTextField();
+        form.add(lblSymptoms);
         form.add(symptomsField);
 
-        form.add(new JLabel("Diagnosis:"));
+        lblDiagnosis = new JLabel(I18nManager.getString("cons.diag.diagnosis", "Diagnosis:"));
         diagnosisField = new JTextField();
+        form.add(lblDiagnosis);
         form.add(diagnosisField);
 
-        form.add(new JLabel("Treatment:"));
+        lblTreatment = new JLabel(I18nManager.getString("cons.diag.treatment", "Treatment:"));
         treatmentField = new JTextField();
+        form.add(lblTreatment);
         form.add(treatmentField);
 
         resultDTO = new ConsultationDTO();
@@ -51,8 +64,8 @@ public class ConsultationDialog extends JDialog {
         }
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton saveBtn = new JButton("Save");
-        JButton cancelBtn = new JButton("Cancel");
+        saveBtn = new JButton(I18nManager.getString("btn.save", "Save"));
+        cancelBtn = new JButton(I18nManager.getString("btn.cancel", "Cancel"));
 
         saveBtn.addActionListener(e -> {
             try {
@@ -63,7 +76,7 @@ public class ConsultationDialog extends JDialog {
                 isApproved = true;
                 dispose();
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Invalid Date Format. Use YYYY-MM-DD.");
+                JOptionPane.showMessageDialog(this, I18nManager.getString("cons.diag.error", "Invalid Date Format. Use YYYY-MM-DD."));
             }
         });
 

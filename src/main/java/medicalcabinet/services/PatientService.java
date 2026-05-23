@@ -2,49 +2,50 @@ package medicalcabinet.services;
 
 import java.util.List;
 import java.util.ArrayList;
-import medicalcabinet.domain.daocontracts.IPatientDAO;
+import java.util.stream.Collectors;
 import medicalcabinet.domain.dtos.PatientDTO;
+import medicalcabinet.services.PatientRestClient;
 
 public class PatientService {
-    private final IPatientDAO patientDAO;
 
+    private final PatientRestClient patientClient;
 
-    public PatientService(IPatientDAO patientDAO) {
-        this.patientDAO = patientDAO;
+    public PatientService(PatientRestClient patientClient) {
+        this.patientClient = patientClient;
     }
 
     public List<PatientDTO> getAllPatients() {
-        return patientDAO.getAllPatients();
+        return patientClient.getAllPatients();
     }
 
     public List<PatientDTO> searchPatientByName(String name) {
         if (name == null || name.trim().isEmpty()) {
             return new ArrayList<>();
         }
-        return patientDAO.getPatientsByName(name);
+        return patientClient.getAllPatients().stream()
+                .filter(p -> p.getFullName().toLowerCase().contains(name.toLowerCase()))
+                .collect(Collectors.toList());
     }
 
     public boolean addPatient(PatientDTO patient) {
         if (patient.getCnp() == null || patient.getCnp().length() != 13) {
             throw new IllegalArgumentException("Invalid CNP length.");
         }
-        return patientDAO.insertPatient(patient);
+        return patientClient.savePatient(patient);
     }
 
     public boolean updatePatient(PatientDTO patient) {
         if (patient.getCnp() == null || patient.getCnp().length() != 13) {
             throw new IllegalArgumentException("Invalid CNP length.");
         }
-        return patientDAO.updatePatient(patient);
+        return patientClient.savePatient(patient);
     }
 
     public boolean deletePatient(int id) {
-        return patientDAO.deletePatient(id);
+        return patientClient.deletePatient(id);
     }
 
     public List<PatientDTO> searchPatientsByName(String name) {
-        return patientDAO.getAllPatients().stream()
-                .filter(p -> p.getFullName().toLowerCase().contains(name.toLowerCase()))
-                .collect(java.util.stream.Collectors.toList());
+        return searchPatientByName(name);
     }
 }

@@ -60,14 +60,6 @@ public class DoctorDashboardView extends JFrame {
         langPanel.add(btnFr);
         langPanel.add(btnEs);
 
-        btnEn.addActionListener(e -> changeLanguage("en", "US"));
-        btnFr.addActionListener(e -> changeLanguage("fr", "FR"));
-        btnEs.addActionListener(e -> changeLanguage("es", "ES"));
-
-        langPanel.add(btnEn);
-        langPanel.add(btnFr);
-        langPanel.add(btnEs);
-
         headerPanel.add(langPanel, BorderLayout.EAST);
         topContainer.add(headerPanel, BorderLayout.NORTH);
 
@@ -134,7 +126,6 @@ public class DoctorDashboardView extends JFrame {
 
         updateLanguageTexts();
 
-
         consultationsTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && consultationsTable.getSelectedRow() != -1) {
                 int row = consultationsTable.getSelectedRow();
@@ -167,11 +158,11 @@ public class DoctorDashboardView extends JFrame {
 
         logoutBtn.addActionListener(e -> {
             this.dispose();
-            medicalcabinet.presentation.ILoginView loginView = new medicalcabinet.presentation.LoginView();
+            medicalcabinet.presentation.LoginView loginView = new medicalcabinet.presentation.LoginView();
             medicalcabinet.services.AuthRestClient authClient = new medicalcabinet.services.AuthRestClient();
             medicalcabinet.presentation.LoginPresenter loginPresenter = new medicalcabinet.presentation.LoginPresenter(loginView, authClient);
-            ((medicalcabinet.presentation.LoginView) loginView).setPresenter(loginPresenter);
-            ((medicalcabinet.presentation.LoginView) loginView).setVisible(true);
+            loginView.setPresenter(loginPresenter);
+            loginView.setVisible(true);
         });
 
         setLocationRelativeTo(null);
@@ -182,7 +173,6 @@ public class DoctorDashboardView extends JFrame {
         updateLanguageTexts();
     }
 
-    //Traducere
     private void updateLanguageTexts() {
         setTitle(I18nManager.getString("doc.title", "Cabinet Medical - Doctor Dashboard"));
         doctorInfoLabel.setText("  " + I18nManager.getString("doc.welcome", "Bun venit, Dr. ") + doctorName + "!");
@@ -206,7 +196,6 @@ public class DoctorDashboardView extends JFrame {
         updateBtn.setText(I18nManager.getString("doc.updateBtn", "Salvează Modificările"));
         logoutBtn.setText(I18nManager.getString("doc.logoutBtn", "Logout"));
 
-        // Traducerea coloanelor tabelului
         String[] columns = {
                 I18nManager.getString("doc.col.id", "ID Fişă"),
                 I18nManager.getString("doc.col.name", "Nume Pacient"),

@@ -11,28 +11,23 @@ import java.util.List;
 public class AssistantDashboardView extends JFrame {
     private AssistantDashboardPresenter presenter;
 
-    // Componente Căutare
     private JLabel searchLabel;
     private JTextField searchField;
     private JButton searchBtn;
     private JButton resetBtn;
 
-    // Componente Tabel
     private JTable patientTable;
     private DefaultTableModel tableModel;
 
-    // Panouri pentru titluri traductibile
     private JPanel topPanel;
     private JPanel patientActionPanel;
     private JPanel exportActionPanel;
 
-    // Componente Acțiuni
     private JButton addPatientBtn;
     private JButton deletePatientBtn;
     private JButton scheduleBtn;
-    private JButton statsBtn; // <--- Butonul nou pentru statistici
+    private JButton statsBtn;
 
-    // Componente Export (Plugin-uri)
     private JButton exportCsvBtn;
     private JButton exportJsonBtn;
     private JButton exportXmlBtn;
@@ -40,16 +35,12 @@ public class AssistantDashboardView extends JFrame {
     private JButton logoutBtn;
 
     public AssistantDashboardView() {
-        setSize(1050, 600); // Lățime ușor mărită pentru a acomoda noul buton
+        setSize(1050, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
-        // ==========================================
-        // 1. TOP PANEL: Căutare Pacienți & LIMBĂ
-        // ==========================================
         JPanel topContainer = new JPanel(new BorderLayout());
 
-        // Stânga: Căutare
         topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchLabel = new JLabel();
         searchField = new JTextField(20);
@@ -61,7 +52,6 @@ public class AssistantDashboardView extends JFrame {
         topPanel.add(searchBtn);
         topPanel.add(resetBtn);
 
-        // Dreapta: Butoanele de limbă (EN, FR, ES)
         JPanel langPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnEn = new JButton("EN");
         JButton btnFr = new JButton("FR");
@@ -75,14 +65,10 @@ public class AssistantDashboardView extends JFrame {
         langPanel.add(btnFr);
         langPanel.add(btnEs);
 
-        // Îmbinare perfectă stânga-dreapta
         topContainer.add(topPanel, BorderLayout.WEST);
         topContainer.add(langPanel, BorderLayout.EAST);
         add(topContainer, BorderLayout.NORTH);
 
-        // ==========================================
-        // 2. CENTER PANEL: Tabelul cu Pacienți
-        // ==========================================
         String[] columns = {"ID", "Nume", "CNP", "Vârstă"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -91,12 +77,8 @@ public class AssistantDashboardView extends JFrame {
         patientTable = new JTable(tableModel);
         add(new JScrollPane(patientTable), BorderLayout.CENTER);
 
-        // ==========================================
-        // 3. BOTTOM PANEL: Acțiuni administrative & Exporturi
-        // ==========================================
         JPanel bottomContainer = new JPanel(new GridLayout(2, 1, 5, 5));
 
-        // Rândul de sus (Acțiuni Pacienți)
         patientActionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         addPatientBtn = new JButton();
         deletePatientBtn = new JButton();
@@ -105,13 +87,12 @@ public class AssistantDashboardView extends JFrame {
 
         patientActionPanel.add(addPatientBtn);
         patientActionPanel.add(deletePatientBtn);
-        patientActionPanel.add(Box.createHorizontalStrut(20)); // Spațiere vizuală
+        patientActionPanel.add(Box.createHorizontalStrut(20));
         patientActionPanel.add(scheduleBtn);
         patientActionPanel.add(Box.createHorizontalStrut(10));
-        patientActionPanel.add(statsBtn); // Butonul de statistici adăugat în rând
+        patientActionPanel.add(statsBtn);
         bottomContainer.add(patientActionPanel);
 
-        // Rândul de jos (Exporturi)
         exportActionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         exportCsvBtn = new JButton();
         exportJsonBtn = new JButton();
@@ -129,9 +110,6 @@ public class AssistantDashboardView extends JFrame {
 
         add(bottomContainer, BorderLayout.SOUTH);
 
-        // ==========================================
-        // 4. EVENIMENTE BUTOANE
-        // ==========================================
         searchBtn.addActionListener(e -> { if (presenter != null) presenter.onSearchClicked(searchField.getText()); });
         resetBtn.addActionListener(e -> {
             searchField.setText("");
@@ -151,8 +129,6 @@ public class AssistantDashboardView extends JFrame {
         });
 
         scheduleBtn.addActionListener(e -> { if (presenter != null) presenter.onScheduleAppointmentClicked(); });
-
-        // Listener-ul pentru statistici
         statsBtn.addActionListener(e -> { if (presenter != null) presenter.onStatisticsClicked(); });
 
         exportCsvBtn.addActionListener(e -> { if (presenter != null) presenter.onExportClicked("CSV"); });
@@ -168,7 +144,6 @@ public class AssistantDashboardView extends JFrame {
             loginView.setVisible(true);
         });
 
-        // Inițializare Texte Live
         updateLanguageTexts();
         setLocationRelativeTo(null);
     }
@@ -190,16 +165,13 @@ public class AssistantDashboardView extends JFrame {
         addPatientBtn.setText(I18nManager.getString("ast.btn_add", "Adaugă Pacient Nou"));
         deletePatientBtn.setText(I18nManager.getString("ast.btn_delete", "Șterge Pacient Selectat"));
         scheduleBtn.setText(I18nManager.getString("ast.btn_schedule", "Programează Consultație Nouă"));
-        statsBtn = new JButton("Generează Grafice (Statistici)");
+        statsBtn.setText(I18nManager.getString("ast.btn_stats", "Generează Grafice"));
 
-        // Traducerea butonului de statistici
-        statsBtn.setText("Generate charts (Statistici)");
-
-        exportActionPanel.setBorder(BorderFactory.createTitledBorder(I18nManager.getString("ast.export", "Export Date (Microkernel Plugins)")));
+        exportActionPanel.setBorder(BorderFactory.createTitledBorder(I18nManager.getString("ast.export", "Export Date")));
         exportCsvBtn.setText(I18nManager.getString("ast.btn_csv", "Export CSV"));
         exportJsonBtn.setText(I18nManager.getString("ast.btn_json", "Export JSON"));
         exportXmlBtn.setText(I18nManager.getString("ast.btn_xml", "Export XML"));
-        exportDocBtn.setText(I18nManager.getString("ast.btn_doc", "Export DOC (Word)"));
+        exportDocBtn.setText(I18nManager.getString("ast.btn_doc", "Export DOC"));
         logoutBtn.setText(I18nManager.getString("ast.btn_logout", "Logout"));
 
         String[] columns = {

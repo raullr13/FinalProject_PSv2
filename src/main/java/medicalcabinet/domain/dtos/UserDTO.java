@@ -5,7 +5,9 @@ public class UserDTO {
     private String username;
     private UserRole role;
     private String email;
-    private String token;
+    private String password;
+
+    public UserDTO() {}
 
     public UserDTO(int id, String username, UserRole role, String email) {
         this.id = id;
@@ -25,4 +27,8 @@ public class UserDTO {
     public void setUsername(String username) { this.username = username; }
     public void setRole(UserRole role) { this.role = role; }
     public void setEmail(String email) { this.email = email; }
+
+    public void setPassword(String newPassword) {
+        this.password = newPassword;
+    }
 }

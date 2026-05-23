@@ -17,12 +17,10 @@ public class LoginView extends JFrame implements ILoginView {
         setLayout(new BorderLayout(10, 10));
         setResizable(false);
 
-        // Header
         JLabel headerLabel = new JLabel("IAM Authentication System", SwingConstants.CENTER);
         headerLabel.setFont(new Font("Arial", Font.BOLD, 14));
         add(headerLabel, BorderLayout.NORTH);
 
-        // Form Panel
         JPanel formPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         formPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
@@ -36,7 +34,6 @@ public class LoginView extends JFrame implements ILoginView {
 
         add(formPanel, BorderLayout.CENTER);
 
-        // Login Button Panel
         JPanel buttonPanel = new JPanel();
         loginButton = new JButton("Login via IAM Service");
         buttonPanel.add(loginButton);

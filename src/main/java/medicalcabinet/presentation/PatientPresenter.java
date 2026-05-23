@@ -1,7 +1,7 @@
 package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.PatientDTO;
-import medicalcabinet.network.PatientRestClient; // Import the REST Client
+import medicalcabinet.services.PatientRestClient;
 import java.util.List;
 
 public class PatientPresenter {
@@ -43,7 +43,6 @@ public class PatientPresenter {
 
             if (updatedPatient != null) {
                 try {
-                    // Simulate PUT Request
                     restClient.updatePatient(updatedPatient);
                     view.showMessage("200 OK: Patient updated successfully!");
                     loadAllPatients();
@@ -60,7 +59,7 @@ public class PatientPresenter {
         PatientDTO selectedPatient = view.getSelectedPatient();
         if (selectedPatient != null) {
             try {
-                restClient.deletePatient(String.valueOf(selectedPatient.getId()));
+                restClient.deletePatient(selectedPatient.getId());
                 view.showMessage("200 OK: Patient deleted successfully!");
                 loadAllPatients();
             } catch (Exception e) {
@@ -77,7 +76,6 @@ public class PatientPresenter {
             if (searchText == null || searchText.trim().isEmpty()) {
                 loadAllPatients();
             } else {
-                // Simulate GET Request with query parameters
                 List<PatientDTO> searchResults = restClient.searchPatients(searchText);
                 view.displayPatients(searchResults);
 

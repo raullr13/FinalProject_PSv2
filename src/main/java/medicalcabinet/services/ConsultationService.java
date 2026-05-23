@@ -1,42 +1,40 @@
 package medicalcabinet.services;
 
-import medicalcabinet.domain.daocontracts.IConsultationDAO;
 import medicalcabinet.domain.dtos.ConsultationDTO;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ConsultationService {
-    private final IConsultationDAO consultationDAO;
 
-    public ConsultationService(IConsultationDAO consultationDAO) {
-        this.consultationDAO = consultationDAO;
+    private final ConsultationRestClient consultationClient;
+
+    public ConsultationService(ConsultationRestClient consultationClient) {
+        this.consultationClient = consultationClient;
     }
 
     public List<ConsultationDTO> getPatientMedicalRecord(int patientId) {
-        return consultationDAO.getConsultationsByPatientId(patientId);
+        return consultationClient.getPatientMedicalRecord(patientId);
     }
 
     public List<ConsultationDTO> getDoctorConsultations(int doctorId) {
-        return consultationDAO.getConsultationsByDoctorId(doctorId);
+        return consultationClient.getDoctorConsultations(doctorId);
     }
 
-    // --- Standard CRUD Operations (Fixed method names to match interface) ---
     public boolean addConsultation(ConsultationDTO consultation) {
-        return consultationDAO.save(consultation); // Changed from insertConsultation
+        return consultationClient.addConsultation(consultation);
     }
 
     public boolean updateConsultation(ConsultationDTO consultation) {
-        return consultationDAO.update(consultation);
+        return consultationClient.updateConsultation(consultation);
     }
 
     public boolean deleteConsultation(int id) {
-        return consultationDAO.delete(id);
+        return consultationClient.deleteConsultation(id);
     }
 
     public List<ConsultationDTO> filterDoctorConsultations(int doctorId, String filterDiagnosis, String filterTreatment) {
-        List<ConsultationDTO> allDocsConsultations = consultationDAO.getConsultationsByDoctorId(doctorId);
+        List<ConsultationDTO> allDocsConsultations = consultationClient.getDoctorConsultations(doctorId);
 
         return allDocsConsultations.stream()
                 .filter(c -> filterDiagnosis == null || filterDiagnosis.isEmpty() ||
@@ -47,13 +45,12 @@ public class ConsultationService {
     }
 
     public List<ConsultationDTO> filterConsultations(int patientId, LocalDate date, String diagnosis) {
-        // Get all consultations for this specific patient
-        List<ConsultationDTO> patientConsultations = consultationDAO.getConsultationsByPatientId(patientId);
+        List<ConsultationDTO> patientConsultations = consultationClient.getPatientMedicalRecord(patientId);
 
         return patientConsultations.stream()
                 .filter(c -> date == null || c.getConsultationDate().equals(date))
                 .filter(c -> diagnosis == null || diagnosis.trim().isEmpty() ||
                         (c.getDiagnosis() != null && c.getDiagnosis().toLowerCase().contains(diagnosis.toLowerCase())))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 }

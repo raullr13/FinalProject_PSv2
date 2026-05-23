@@ -4,6 +4,7 @@ import medicalcabinet.domain.dtos.ConsultationDTO;
 import medicalcabinet.domain.plugincontracts.IExportPlugin;
 import medicalcabinet.domain.plugincontracts.IStatisticsPlugin;
 import medicalcabinet.services.ConsultationService;
+import medicalcabinet.presentation.utils.I18nManager;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,10 +37,10 @@ public class ConsultationPresenter {
         ConsultationDTO newConsultation = view.showConsultationFormDialog(null, patientId);
         if (newConsultation != null) {
             if (service.addConsultation(newConsultation)) {
-                view.showMessage("Consultation added!");
+                view.showMessage(I18nManager.getString("cons.add.success", "Consultation added!"));
                 refreshConsultationList();
             } else {
-                view.showMessage("Failed to add consultation.");
+                view.showMessage(I18nManager.getString("cons.add.fail", "Failed to add consultation."));
             }
         }
     }
@@ -47,17 +48,17 @@ public class ConsultationPresenter {
     public void onUpdateClicked() {
         ConsultationDTO selected = view.getSelectedConsultation();
         if (selected == null) {
-            view.showMessage("Select a consultation to update.");
+            view.showMessage(I18nManager.getString("cons.select.update", "Select a consultation to update."));
             return;
         }
 
         ConsultationDTO updated = view.showConsultationFormDialog(selected, patientId);
         if (updated != null) {
             if (service.updateConsultation(updated)) {
-                view.showMessage("Consultation updated!");
+                view.showMessage(I18nManager.getString("cons.update.success", "Consultation updated!"));
                 refreshConsultationList();
             } else {
-                view.showMessage("Failed to update consultation.");
+                view.showMessage(I18nManager.getString("cons.update.fail", "Failed to update consultation."));
             }
         }
     }
@@ -65,15 +66,15 @@ public class ConsultationPresenter {
     public void onDeleteClicked() {
         ConsultationDTO selected = view.getSelectedConsultation();
         if (selected == null) {
-            view.showMessage("Select a consultation to delete.");
+            view.showMessage(I18nManager.getString("cons.select.delete", "Select a consultation to delete."));
             return;
         }
 
         if (service.deleteConsultation(selected.getId())) {
-            view.showMessage("Consultation deleted!");
+            view.showMessage(I18nManager.getString("cons.delete.success", "Consultation deleted!"));
             refreshConsultationList();
         } else {
-            view.showMessage("Failed to delete consultation.");
+            view.showMessage(I18nManager.getString("cons.delete.fail", "Failed to delete consultation."));
         }
     }
 
@@ -81,8 +82,6 @@ public class ConsultationPresenter {
         List<ConsultationDTO> list = service.getPatientMedicalRecord(patientId);
         view.displayConsultations(list);
     }
-
-    // Microkernel Plugins Dependencies
 
     public void onExportCsvClicked() {
         handleExport("CSV", ".csv");
@@ -104,21 +103,21 @@ public class ConsultationPresenter {
         for (IExportPlugin plugin : plugins) {
             if (plugin.getFormatName().equalsIgnoreCase(formatName)) {
                 if (plugin.exportConsultations(path, currentConsultations)) {
-                    view.showMessage(formatName + " export successful!");
+                    view.showMessage(formatName + " " + I18nManager.getString("cons.export.success", "export successful!"));
                 } else {
-                    view.showMessage(formatName + " export failed. Check file permissions.");
+                    view.showMessage(formatName + " " + I18nManager.getString("cons.export.fail", "export failed. Check file permissions."));
                 }
                 return;
             }
         }
-        view.showMessage("Configuration Error: No plugin found for format: " + formatName);
+        view.showMessage(I18nManager.getString("cons.plugin.error", "Configuration Error: No plugin found for format: ") + formatName);
     }
 
     public void onStatsClicked() {
         List<ConsultationDTO> currentConsultations = service.getPatientMedicalRecord(patientId);
 
         if (currentConsultations.isEmpty()) {
-            view.showMessage("Not enough data to generate statistics.");
+            view.showMessage(I18nManager.getString("cons.stats.nodata", "Not enough data to generate statistics."));
             return;
         }
 
@@ -135,7 +134,7 @@ public class ConsultationPresenter {
         }
 
         if (!pluginFound) {
-            view.showMessage("Diagnosis statistics plugin not found in the plugins_folder.");
+            view.showMessage(I18nManager.getString("cons.stats.plugin.error", "Diagnosis statistics plugin not found in the plugins_folder."));
         }
     }
 }

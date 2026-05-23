@@ -1,34 +1,38 @@
 package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.DoctorDTO;
-import medicalcabinet.repositoryaccess.SqlDoctorDAO;
+// NEW IMPORT
+import medicalcabinet.services.DoctorRestClient;
 
 public class PublicPresenter {
     private IPublicView view;
-    private SqlDoctorDAO doctorDAO;
+    private DoctorRestClient doctorClient;
 
     public PublicPresenter(IPublicView view) {
         this.view = view;
-        this.doctorDAO = new SqlDoctorDAO();
+        this.doctorClient = new DoctorRestClient();
         loadSpecializations();
     }
 
     public void loadSpecializations() {
-        view.displaySpecializations(doctorDAO.getAllSpecializations());
+        view.displaySpecializations(doctorClient.getAllSpecializations());
     }
 
     public void onSpecializationSelected(String specialization) {
         if (specialization != null) {
-            view.displayDoctors(doctorDAO.getDoctorsBySpecialization(specialization));
+            view.displayDoctors(doctorClient.getDoctorsBySpecialization(specialization));
         }
     }
 
     public void onSearchClicked() {
         String query = view.getSearchQuery();
         if (query != null && !query.trim().isEmpty()) {
-            view.displayDoctors(doctorDAO.searchDoctorsByName(query));
+            view.displayDoctors(doctorClient.searchDoctorsByName(query));
         } else {
             view.showMessage("Please enter a name to search.");
         }
     }
+
+
+
 }

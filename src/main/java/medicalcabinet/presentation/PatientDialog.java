@@ -1,6 +1,7 @@
 package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.PatientDTO;
+import medicalcabinet.presentation.utils.I18nManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,16 +25,19 @@ public class PatientDialog extends JDialog {
         JPanel formPanel = new JPanel(new GridLayout(3, 2, 5, 5));
         formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        formPanel.add(new JLabel("Name:"));
         nameField = new JTextField(patient != null ? patient.getFullName() : "");
+
+        cnpField = new JTextField(patient != null ? patient.getCnp() : "");
+
+        ageField = new JTextField(patient != null ? String.valueOf(patient.getAge()) : "");
+
+        formPanel.add(new JLabel(I18nManager.getString("lbl.name", "Name:")));
         formPanel.add(nameField);
 
-        formPanel.add(new JLabel("CNP:"));
-        cnpField = new JTextField(patient != null ? patient.getCnp() : "");
+        formPanel.add(new JLabel(I18nManager.getString("lbl.cnp", "CNP:")));
         formPanel.add(cnpField);
 
-        formPanel.add(new JLabel("Age:"));
-        ageField = new JTextField(patient != null ? String.valueOf(patient.getAge()) : "");
+        formPanel.add(new JLabel(I18nManager.getString("lbl.age", "Age:")));
         formPanel.add(ageField);
 
         add(formPanel, BorderLayout.CENTER);

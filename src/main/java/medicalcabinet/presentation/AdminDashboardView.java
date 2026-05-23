@@ -1,6 +1,7 @@
 package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.UserDTO;
+import medicalcabinet.presentation.utils.I18nManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -12,21 +13,23 @@ public class AdminDashboardView extends JFrame implements IAdminView {
     private JTable userTable;
     private DefaultTableModel tableModel;
     private JComboBox<String> roleFilterCombo;
-    private javax.swing.JButton btnUpdate;
+    private JButton btnUpdate;
+    private JButton exportBtn;
+    private JButton notifyBtn;
+    private JButton addBtn;
+    private JButton deleteBtn;
+    private JPanel topPanel;
 
     public AdminDashboardView() {
-        setTitle("Medical Cabinet - Administrator Dashboard");
         setSize(800, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        topPanel.setBorder(BorderFactory.createTitledBorder("Filtrare Utilizatori"));
-        topPanel.add(new JLabel("Alege Tip Utilizator:"));
+        topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        add(topPanel, BorderLayout.NORTH);
 
         roleFilterCombo = new JComboBox<>(new String[]{"ALL", "ADMINISTRATOR", "DOCTOR", "ASSISTANT", "PATIENT"});
         topPanel.add(roleFilterCombo);
-        add(topPanel, BorderLayout.NORTH);
 
         String[] columns = {"ID", "Username", "Role", "Email"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -37,11 +40,11 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         add(new JScrollPane(userTable), BorderLayout.CENTER);
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton exportBtn = new JButton("Export to CSV");
-        JButton notifyBtn = new JButton("Notify User (Email/SMS)");
-        JButton addBtn = new JButton("Add User");
-        JButton deleteBtn = new JButton("Delete User");
-        btnUpdate = new javax.swing.JButton("Update User");
+        exportBtn = new JButton();
+        notifyBtn = new JButton();
+        addBtn = new JButton();
+        deleteBtn = new JButton();
+        btnUpdate = new JButton();
 
         bottomPanel.add(exportBtn);
         bottomPanel.add(notifyBtn);
@@ -56,11 +59,10 @@ public class AdminDashboardView extends JFrame implements IAdminView {
             }
         });
 
-        // Export Action
         exportBtn.addActionListener(e -> {
             if (presenter != null) {
                 JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setDialogTitle("Salvează lista ca CSV");
+                fileChooser.setDialogTitle(I18nManager.getString("admin.export.title", "Salvează lista ca CSV"));
                 int userSelection = fileChooser.showSaveDialog(this);
                 if (userSelection == JFileChooser.APPROVE_OPTION) {
                     String path = fileChooser.getSelectedFile().getAbsolutePath();
@@ -73,30 +75,29 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         btnUpdate.addActionListener(e -> {
             if (presenter != null) {
                 UserDTO selectedUser = getSelectedUser();
-
                 if (selectedUser == null) {
-                    showMessage("Vă rugăm să selectați un utilizator din tabel pentru actualizare.");
+                    showMessage(I18nManager.getString("admin.select.error", "Select a user."));
                     return;
                 }
 
                 JTextField usernameField = new JTextField(selectedUser.getUsername(), 10);
-                JPasswordField passwordField = new JPasswordField(10); // Parola rămâne goală (nu o afișăm)
+                JPasswordField passwordField = new JPasswordField(10);
                 JComboBox<String> roleCombo = new JComboBox<>(new String[]{"ADMINISTRATOR", "DOCTOR", "ASSISTANT", "PATIENT"});
-                roleCombo.setSelectedItem(selectedUser.getRole().name()); // Setează rolul curent
+                roleCombo.setSelectedItem(selectedUser.getRole().name());
                 JTextField emailField = new JTextField(selectedUser.getEmail(), 15);
 
                 JPanel myPanel = new JPanel(new GridLayout(4, 2, 5, 5));
-                myPanel.add(new JLabel("Username:"));
+                myPanel.add(new JLabel(I18nManager.getString("admin.username", "Username:")));
                 myPanel.add(usernameField);
-                myPanel.add(new JLabel("Parolă nouă (lasă gol pt a nu modifica):"));
+                myPanel.add(new JLabel(I18nManager.getString("admin.pwd.new", "New Password:")));
                 myPanel.add(passwordField);
-                myPanel.add(new JLabel("Rol:"));
+                myPanel.add(new JLabel(I18nManager.getString("admin.role", "Role:")));
                 myPanel.add(roleCombo);
-                myPanel.add(new JLabel("Email:"));
+                myPanel.add(new JLabel(I18nManager.getString("admin.email", "Email:")));
                 myPanel.add(emailField);
 
                 int result = JOptionPane.showConfirmDialog(this, myPanel,
-                        "Actualizare Utilizator", JOptionPane.OK_CANCEL_OPTION);
+                        I18nManager.getString("admin.update.title", "Update User"), JOptionPane.OK_CANCEL_OPTION);
 
                 if (result == JOptionPane.OK_OPTION) {
                     presenter.onUpdateUserClicked(
@@ -109,7 +110,6 @@ public class AdminDashboardView extends JFrame implements IAdminView {
             }
         });
 
-        // Add User Action
         addBtn.addActionListener(e -> {
             if (presenter != null) {
                 JTextField usernameField = new JTextField(10);
@@ -118,17 +118,17 @@ public class AdminDashboardView extends JFrame implements IAdminView {
                 JTextField emailField = new JTextField(15);
 
                 JPanel myPanel = new JPanel(new GridLayout(4, 2, 5, 5));
-                myPanel.add(new JLabel("Username:"));
+                myPanel.add(new JLabel(I18nManager.getString("admin.username", "Username:")));
                 myPanel.add(usernameField);
-                myPanel.add(new JLabel("Password:"));
+                myPanel.add(new JLabel(I18nManager.getString("admin.password", "Password:")));
                 myPanel.add(passwordField);
-                myPanel.add(new JLabel("Role:"));
+                myPanel.add(new JLabel(I18nManager.getString("admin.role", "Role:")));
                 myPanel.add(roleCombo);
-                myPanel.add(new JLabel("Email:"));
+                myPanel.add(new JLabel(I18nManager.getString("admin.email", "Email:")));
                 myPanel.add(emailField);
 
                 int result = JOptionPane.showConfirmDialog(null, myPanel,
-                        "Introduceți datele noului utilizator", JOptionPane.OK_CANCEL_OPTION);
+                        I18nManager.getString("admin.add.title", "Add User"), JOptionPane.OK_CANCEL_OPTION);
                 if (result == JOptionPane.OK_OPTION) {
                     presenter.onAddUserClicked(
                             usernameField.getText(),
@@ -143,7 +143,18 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         notifyBtn.addActionListener(e -> { if (presenter != null) presenter.onNotifyClicked(); });
         deleteBtn.addActionListener(e -> { if (presenter != null) presenter.onDeleteClicked(); });
 
+        updateUITexts();
         setLocationRelativeTo(null);
+    }
+
+    private void updateUITexts() {
+        setTitle(I18nManager.getString("admin.title", "Medical Cabinet - Administrator Dashboard"));
+        topPanel.setBorder(BorderFactory.createTitledBorder(I18nManager.getString("admin.filter.title", "User Filtering")));
+        exportBtn.setText(I18nManager.getString("admin.btn.export", "Export CSV"));
+        notifyBtn.setText(I18nManager.getString("admin.btn.notify", "Notify User"));
+        addBtn.setText(I18nManager.getString("admin.btn.add", "Add User"));
+        deleteBtn.setText(I18nManager.getString("admin.btn.delete", "Delete User"));
+        btnUpdate.setText(I18nManager.getString("admin.btn.update", "Update User"));
     }
 
     @Override
@@ -163,12 +174,9 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         if (row >= 0) {
             int id = Integer.parseInt(tableModel.getValueAt(row, 0).toString());
             String user = tableModel.getValueAt(row, 1).toString();
-
             String roleStr = tableModel.getValueAt(row, 2).toString();
             medicalcabinet.domain.dtos.UserRole role = medicalcabinet.domain.dtos.UserRole.valueOf(roleStr);
-
             String email = tableModel.getValueAt(row, 3).toString();
-
             return new UserDTO(id, user, role, email);
         }
         return null;

@@ -1,6 +1,7 @@
 package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.ConsultationDTO;
+import medicalcabinet.presentation.utils.I18nManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -18,6 +19,17 @@ public class ConsultationView extends JDialog implements IConsultationView {
     private JTable consultationTable;
     private DefaultTableModel tableModel;
 
+    private JLabel lblDate;
+    private JLabel lblDiag;
+    private JButton filterBtn;
+    private JButton clearBtn;
+    private JButton addBtn;
+    private JButton updateBtn;
+    private JButton deleteBtn;
+    private JButton exportCsvBtn;
+    private JButton exportDocBtn;
+    private JButton statsBtn;
+
     public ConsultationView(Frame parent, int patientId, String patientName) {
         super(parent, "Medical Record - " + patientName, true);
         this.patientId = patientId;
@@ -28,12 +40,14 @@ public class ConsultationView extends JDialog implements IConsultationView {
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filterDateField = new JTextField(10);
         filterDiagField = new JTextField(15);
-        JButton filterBtn = new JButton("Apply Filters");
-        JButton clearBtn = new JButton("Clear Filters");
+        lblDate = new JLabel();
+        lblDiag = new JLabel();
+        filterBtn = new JButton();
+        clearBtn = new JButton();
 
-        filterPanel.add(new JLabel("Date (YYYY-MM-DD):"));
+        filterPanel.add(lblDate);
         filterPanel.add(filterDateField);
-        filterPanel.add(new JLabel("Diagnosis:"));
+        filterPanel.add(lblDiag);
         filterPanel.add(filterDiagField);
         filterPanel.add(filterBtn);
         filterPanel.add(clearBtn);
@@ -47,13 +61,12 @@ public class ConsultationView extends JDialog implements IConsultationView {
         scrollPane.setBorder(BorderFactory.createTitledBorder("Consultation History"));
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton addBtn = new JButton("Add Consultation");
-        JButton updateBtn = new JButton("Update Selected");
-        JButton deleteBtn = new JButton("Delete Selected");
-
-        JButton exportCsvBtn = new JButton("Export CSV");
-        JButton exportDocBtn = new JButton("Export DOC");
-        JButton statsBtn = new JButton("View Statistics");
+        exportCsvBtn = new JButton();
+        exportDocBtn = new JButton();
+        statsBtn = new JButton();
+        addBtn = new JButton();
+        updateBtn = new JButton();
+        deleteBtn = new JButton();
 
         actionPanel.add(exportCsvBtn);
         actionPanel.add(exportDocBtn);
@@ -80,6 +93,30 @@ public class ConsultationView extends JDialog implements IConsultationView {
         addBtn.addActionListener(e -> { if (presenter != null) presenter.onAddClicked(); });
         updateBtn.addActionListener(e -> { if (presenter != null) presenter.onUpdateClicked(); });
         deleteBtn.addActionListener(e -> { if (presenter != null) presenter.onDeleteClicked(); });
+
+        updateUITexts();
+    }
+
+    private void updateUITexts() {
+        lblDate.setText(I18nManager.getString("cons.date", "Date (YYYY-MM-DD):"));
+        lblDiag.setText(I18nManager.getString("cons.diag", "Diagnosis:"));
+        filterBtn.setText(I18nManager.getString("cons.filter", "Apply Filters"));
+        clearBtn.setText(I18nManager.getString("cons.clear", "Clear Filters"));
+        addBtn.setText(I18nManager.getString("cons.add", "Add Consultation"));
+        updateBtn.setText(I18nManager.getString("cons.update", "Update Selected"));
+        deleteBtn.setText(I18nManager.getString("cons.delete", "Delete Selected"));
+        exportCsvBtn.setText(I18nManager.getString("cons.export_csv", "Export CSV"));
+        exportDocBtn.setText(I18nManager.getString("cons.export_doc", "Export DOC"));
+        statsBtn.setText(I18nManager.getString("cons.stats", "View Statistics"));
+
+        String[] columns = {
+                I18nManager.getString("table.id", "ID"),
+                I18nManager.getString("table.date", "Date"),
+                I18nManager.getString("table.symp", "Symptoms"),
+                I18nManager.getString("table.diag", "Diagnosis"),
+                I18nManager.getString("table.treat", "Treatment")
+        };
+        tableModel.setColumnIdentifiers(columns);
     }
 
     public void setPresenter(ConsultationPresenter presenter) {
@@ -93,7 +130,7 @@ public class ConsultationView extends JDialog implements IConsultationView {
         try {
             return LocalDate.parse(text);
         } catch (DateTimeParseException e) {
-            showMessage("Invalid date format. Use YYYY-MM-DD.");
+            showMessage(I18nManager.getString("cons.error.date", "Invalid date format. Use YYYY-MM-DD."));
             return null;
         }
     }
@@ -137,7 +174,7 @@ public class ConsultationView extends JDialog implements IConsultationView {
     @Override
     public String promptForSaveFilePath(String defaultExtension) {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Save Export File");
+        fileChooser.setDialogTitle(I18nManager.getString("file.save", "Save Export File"));
 
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             String path = fileChooser.getSelectedFile().getAbsolutePath();

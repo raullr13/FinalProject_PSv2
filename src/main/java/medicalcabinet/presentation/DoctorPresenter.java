@@ -3,9 +3,9 @@ package medicalcabinet.presentation;
 import medicalcabinet.domain.dtos.ConsultationDTO;
 import medicalcabinet.domain.dtos.PatientDTO;
 import medicalcabinet.domain.dtos.UserDTO;
-import medicalcabinet.repositoryaccess.SqlConsultationDAO;
-import medicalcabinet.repositoryaccess.SqlPatientDAO;
 import medicalcabinet.services.ConsultationService;
+import medicalcabinet.services.ConsultationRestClient;
+import medicalcabinet.services.PatientRestClient;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,17 +13,16 @@ import java.util.stream.Collectors;
 public class DoctorPresenter {
     private DoctorDashboardView view;
     private UserDTO loggedInDoctor;
-
     private ConsultationService consultationService;
-    private SqlPatientDAO patientDAO;
+    private PatientRestClient patientClient;
 
     private List<ConsultationDTO> currentDoctorConsultations;
 
     public DoctorPresenter(DoctorDashboardView view, UserDTO loggedInDoctor) {
         this.view = view;
         this.loggedInDoctor = loggedInDoctor;
-        this.consultationService = new ConsultationService(new SqlConsultationDAO());
-        this.patientDAO = new SqlPatientDAO();
+        this.consultationService = new ConsultationService(new ConsultationRestClient());
+        this.patientClient = new PatientRestClient();
 
         loadAllMyPatients();
     }
@@ -46,7 +45,7 @@ public class DoctorPresenter {
 
         List<ConsultationDTO> searched = currentDoctorConsultations.stream()
                 .filter(c -> {
-                    PatientDTO p = patientDAO.findById(c.getPatientId());
+                    PatientDTO p = patientClient.getPatientById(c.getPatientId());
                     return p != null && p.getFullName().toLowerCase().contains(patientName.toLowerCase());
                 })
                 .collect(Collectors.toList());
@@ -79,7 +78,7 @@ public class DoctorPresenter {
 
         for (int i = 0; i < consultations.size(); i++) {
             ConsultationDTO c = consultations.get(i);
-            PatientDTO p = patientDAO.findById(c.getPatientId());
+            PatientDTO p = patientClient.getPatientById(c.getPatientId());
             String patientName = (p != null) ? p.getFullName() : "Necunoscut";
 
             tableData[i][0] = c.getId();

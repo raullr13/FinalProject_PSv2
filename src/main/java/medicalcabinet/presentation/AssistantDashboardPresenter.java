@@ -1,40 +1,37 @@
 package medicalcabinet.presentation;
 
 import medicalcabinet.domain.dtos.ConsultationDTO;
+import medicalcabinet.domain.dtos.DoctorDTO;
 import medicalcabinet.domain.dtos.PatientDTO;
-import medicalcabinet.repositoryaccess.SqlConsultationDAO;
-import medicalcabinet.repositoryaccess.SqlPatientDAO;
+import medicalcabinet.services.ConsultationRestClient;
 import medicalcabinet.services.ConsultationService;
+import medicalcabinet.services.DoctorRestClient;
+import medicalcabinet.services.PatientRestClient;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import medicalcabinet.repositoryaccess.SqlDoctorDAO;
-import medicalcabinet.domain.dtos.DoctorDTO;
-import java.util.ArrayList;
-
 public class AssistantDashboardPresenter {
     private AssistantDashboardView view;
-    private SqlPatientDAO patientDAO;
+    private PatientRestClient patientClient;
     private ConsultationService consultationService;
-    private SqlDoctorDAO doctorDAO;
+    private DoctorRestClient doctorClient;
 
     public AssistantDashboardPresenter(AssistantDashboardView view) {
         this.view = view;
-        this.patientDAO = new SqlPatientDAO();
-        this.consultationService = new ConsultationService(new SqlConsultationDAO());
-        this.doctorDAO = new SqlDoctorDAO();
+        this.patientClient = new PatientRestClient();
+        this.consultationService = new ConsultationService(new ConsultationRestClient());
+        this.doctorClient = new DoctorRestClient();
 
         loadPatients();
-        // loadDoctors(); // Uncomment when you add the UI table for doctors
     }
 
     public void loadPatients() {
-        List<PatientDTO> patients = patientDAO.findAll();
-        view.displayPatients(patients);
+        view.displayPatients(patientClient.getAllPatients());
     }
 
     public void onSearchClicked(String name) {
@@ -42,7 +39,7 @@ public class AssistantDashboardPresenter {
             loadPatients();
             return;
         }
-        List<PatientDTO> filtered = patientDAO.findAll().stream()
+        List<PatientDTO> filtered = patientClient.getAllPatients().stream()
                 .filter(p -> p.getFullName().toLowerCase().contains(name.toLowerCase()))
                 .collect(Collectors.toList());
         view.displayPatients(filtered);
@@ -61,7 +58,7 @@ public class AssistantDashboardPresenter {
         try {
             int age = Integer.parseInt(ageStr);
             PatientDTO newPatient = new PatientDTO(0, name, cnp, age);
-            if (patientDAO.save(newPatient)) {
+            if (patientClient.savePatient(newPatient)) {
                 view.showMessage("Pacient adăugat cu succes!");
                 loadPatients();
             } else {
@@ -75,7 +72,7 @@ public class AssistantDashboardPresenter {
     public void onDeletePatientClicked(int id) {
         int confirm = JOptionPane.showConfirmDialog(view, "Sigur dorești să ștergi acest pacient?", "Confirmare ștergere", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            if (patientDAO.delete(id)) {
+            if (patientClient.deletePatient(id)) {
                 view.showMessage("Pacient șters!");
                 loadPatients();
             } else {
@@ -85,17 +82,12 @@ public class AssistantDashboardPresenter {
     }
 
     public void onScheduleAppointmentClicked() {
-        List<PatientDTO> allPatients = patientDAO.findAll();
+        List<PatientDTO> allPatients = patientClient.getAllPatients();
         Map<Integer, String> allDoctors = new HashMap<>();
 
-        try (java.sql.Connection conn = medicalcabinet.repositoryaccess.DatabaseConnection.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement("SELECT id, username FROM Users WHERE role = 'DOCTOR'");
-             java.sql.ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                allDoctors.put(rs.getInt("id"), rs.getString("username"));
-            }
-        } catch (java.sql.SQLException e) {
-            e.printStackTrace();
+        List<DoctorDTO> doctors = doctorClient.getAllDoctors();
+        for (DoctorDTO doc : doctors) {
+            allDoctors.put(doc.getId(), doc.getFullName());
         }
 
         ScheduleDialog dialog = new ScheduleDialog(view, allPatients, allDoctors);
@@ -119,10 +111,10 @@ public class AssistantDashboardPresenter {
             path += "." + format.toLowerCase();
         }
 
-        List<PatientDTO> currentPatients = patientDAO.findAll();
+        List<PatientDTO> currentPatients = patientClient.getAllPatients();
 
         medicalcabinet.core.PluginManager manager = new medicalcabinet.core.PluginManager();
-        java.util.List<medicalcabinet.domain.plugincontracts.IExportPlugin> plugins = manager.loadExportPlugins("plugins_folder");
+        List<medicalcabinet.domain.plugincontracts.IExportPlugin> plugins = manager.loadExportPlugins("plugins_folder");
 
         for (medicalcabinet.domain.plugincontracts.IExportPlugin plugin : plugins) {
             if (plugin.getFormatName().equalsIgnoreCase(format)) {
@@ -134,26 +126,8 @@ public class AssistantDashboardPresenter {
     }
 
     public void onStatisticsClicked() {
-        List<PatientDTO> allPatients = patientDAO.findAll();
-
-        List<ConsultationDTO> allConsultations = new java.util.ArrayList<>();
-        try (java.sql.Connection conn = medicalcabinet.repositoryaccess.DatabaseConnection.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Consultations");
-             java.sql.ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                allConsultations.add(new ConsultationDTO(
-                        rs.getInt("id"),
-                        rs.getInt("patient_id"),
-                        rs.getInt("doctor_id"),
-                        rs.getDate("consultation_date").toLocalDate(),
-                        rs.getString("symptoms"),
-                        rs.getString("diagnosis"),
-                        rs.getString("treatment")
-                ));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        List<PatientDTO> allPatients = patientClient.getAllPatients();
+        List<ConsultationDTO> allConsultations = new ConsultationRestClient().getAllConsultations();
 
         medicalcabinet.core.PluginManager manager = new medicalcabinet.core.PluginManager();
         List<medicalcabinet.domain.plugincontracts.IStatisticsPlugin> statPlugins = manager.loadStatisticsPlugins("plugins_folder");
@@ -164,29 +138,25 @@ public class AssistantDashboardPresenter {
         }
 
         int chartsOpened = 0;
-
         for (medicalcabinet.domain.plugincontracts.IStatisticsPlugin plugin : statPlugins) {
-
             if (plugin.getClass().getName().toLowerCase().contains("audit")) {
                 continue;
             }
-
             try {
                 plugin.generatePatientStatisticsChart(allPatients, allConsultations);
                 chartsOpened++;
             } catch (Exception e) {
-                System.out.println("Eroare la generarea graficului pentru: " + plugin.getChartType());
                 e.printStackTrace();
             }
         }
 
         if (chartsOpened > 0) {
-            view.showMessage("Succes! Au fost generate " + chartsOpened + " grafice de statistici.");
+            view.showMessage("Succes! Au fost generate " + chartsOpened + " grafice.");
         }
     }
 
     public void onAdvancedFilterClicked(String medicName, String diagnosis, String ageStr) {
-        List<PatientDTO> allPatients = patientDAO.findAll();
+        List<PatientDTO> allPatients = patientClient.getAllPatients();
 
         if (ageStr != null && !ageStr.trim().isEmpty()) {
             try {
@@ -201,22 +171,7 @@ public class AssistantDashboardPresenter {
         }
 
         if ((diagnosis != null && !diagnosis.trim().isEmpty()) || (medicName != null && !medicName.trim().isEmpty())) {
-
-            List<ConsultationDTO> allConsultations = new ArrayList<>();
-            try (java.sql.Connection conn = medicalcabinet.repositoryaccess.DatabaseConnection.getConnection();
-                 java.sql.PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Consultations");
-                 java.sql.ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    allConsultations.add(new ConsultationDTO(
-                            rs.getInt("id"), rs.getInt("patient_id"), rs.getInt("doctor_id"),
-                            rs.getDate("consultation_date").toLocalDate(),
-                            rs.getString("symptoms"), rs.getString("diagnosis"), rs.getString("treatment")
-                    ));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
+            List<ConsultationDTO> allConsultations = new ConsultationRestClient().getAllConsultations();
 
             allPatients = allPatients.stream().filter(patient -> {
                 List<ConsultationDTO> patientConsultations = allConsultations.stream()
@@ -232,16 +187,13 @@ public class AssistantDashboardPresenter {
                                 consult.getDiagnosis().toLowerCase().contains(diagnosis.toLowerCase());
                     }
 
-
                     if (medicName != null && !medicName.trim().isEmpty()) {
-                        DoctorDTO doctor = doctorDAO.findById(consult.getDoctorId());
+                        DoctorDTO doctor = doctorClient.getDoctorById(consult.getDoctorId());
                         matchesMedic = doctor != null &&
                                 doctor.getFullName().toLowerCase().contains(medicName.toLowerCase());
                     }
 
-                    if (matchesDiagnosis && matchesMedic) {
-                        return true;
-                    }
+                    if (matchesDiagnosis && matchesMedic) return true;
                 }
                 return false;
             }).collect(Collectors.toList());
@@ -249,56 +201,4 @@ public class AssistantDashboardPresenter {
 
         view.displayPatients(allPatients);
     }
-
-    public void loadDoctors() {
-    }
-
-    public void onAddDoctorClicked() {
-        String username = JOptionPane.showInputDialog(view, "Nume Medic:");
-        if (username == null || username.trim().isEmpty()) return;
-
-        String specialization = JOptionPane.showInputDialog(view, "Specializare:");
-        if (specialization == null || specialization.trim().isEmpty()) return;
-
-        String schedule = JOptionPane.showInputDialog(view, "Program (ex: Luni-Vineri 08:00-14:00):");
-
-        boolean success = doctorDAO.insertDoctor(username, specialization, schedule);
-        if (success) {
-            view.showMessage("Medic adăugat cu succes!");
-            loadDoctors();
-        } else {
-            view.showMessage("Eroare la adăugarea medicului.");
-        }
-    }
-
-    public void onUpdateDoctorClicked(int doctorId) {
-        String newSchedule = JOptionPane.showInputDialog(view, "Introduceți noul program pentru medic:");
-        if (newSchedule == null || newSchedule.trim().isEmpty()) return;
-
-        boolean success = doctorDAO.updateDoctorSchedule(doctorId, newSchedule);
-        if (success) {
-            view.showMessage("Programul medicului a fost actualizat!");
-            loadDoctors();
-        } else {
-            view.showMessage("Eroare la actualizarea medicului.");
-        }
-    }
-
-    public void onDeleteDoctorClicked(int doctorId) {
-        int confirm = JOptionPane.showConfirmDialog(view,
-                "Sigur dorești să ștergi acest medic din sistem?",
-                "Confirmare ștergere", JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            if (doctorDAO.deleteDoctor(doctorId)) {
-                view.showMessage("Medic șters cu succes!");
-                loadDoctors();
-            } else {
-                view.showMessage("Eroare la ștergerea medicului.");
-            }
-        }
-    }
-
-
-
 }

@@ -12,6 +12,7 @@ public class AdminDashboardView extends JFrame implements IAdminView {
     private JTable userTable;
     private DefaultTableModel tableModel;
     private JComboBox<String> roleFilterCombo;
+    private javax.swing.JButton btnUpdate;
 
     public AdminDashboardView() {
         setTitle("Medical Cabinet - Administrator Dashboard");
@@ -40,11 +41,13 @@ public class AdminDashboardView extends JFrame implements IAdminView {
         JButton notifyBtn = new JButton("Notify User (Email/SMS)");
         JButton addBtn = new JButton("Add User");
         JButton deleteBtn = new JButton("Delete User");
+        btnUpdate = new javax.swing.JButton("Update User");
 
         bottomPanel.add(exportBtn);
         bottomPanel.add(notifyBtn);
         bottomPanel.add(addBtn);
         bottomPanel.add(deleteBtn);
+        bottomPanel.add(btnUpdate);
         add(bottomPanel, BorderLayout.SOUTH);
 
         roleFilterCombo.addActionListener(e -> {
@@ -67,10 +70,48 @@ public class AdminDashboardView extends JFrame implements IAdminView {
             }
         });
 
+        btnUpdate.addActionListener(e -> {
+            if (presenter != null) {
+                UserDTO selectedUser = getSelectedUser();
+
+                if (selectedUser == null) {
+                    showMessage("Vă rugăm să selectați un utilizator din tabel pentru actualizare.");
+                    return;
+                }
+
+                JTextField usernameField = new JTextField(selectedUser.getUsername(), 10);
+                JPasswordField passwordField = new JPasswordField(10); // Parola rămâne goală (nu o afișăm)
+                JComboBox<String> roleCombo = new JComboBox<>(new String[]{"ADMINISTRATOR", "DOCTOR", "ASSISTANT", "PATIENT"});
+                roleCombo.setSelectedItem(selectedUser.getRole().name()); // Setează rolul curent
+                JTextField emailField = new JTextField(selectedUser.getEmail(), 15);
+
+                JPanel myPanel = new JPanel(new GridLayout(4, 2, 5, 5));
+                myPanel.add(new JLabel("Username:"));
+                myPanel.add(usernameField);
+                myPanel.add(new JLabel("Parolă nouă (lasă gol pt a nu modifica):"));
+                myPanel.add(passwordField);
+                myPanel.add(new JLabel("Rol:"));
+                myPanel.add(roleCombo);
+                myPanel.add(new JLabel("Email:"));
+                myPanel.add(emailField);
+
+                int result = JOptionPane.showConfirmDialog(this, myPanel,
+                        "Actualizare Utilizator", JOptionPane.OK_CANCEL_OPTION);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    presenter.onUpdateUserClicked(
+                            usernameField.getText(),
+                            new String(passwordField.getPassword()),
+                            (String) roleCombo.getSelectedItem(),
+                            emailField.getText()
+                    );
+                }
+            }
+        });
+
         // Add User Action
         addBtn.addActionListener(e -> {
             if (presenter != null) {
-                // Formular rapid prin JInputDialogs / JPanels
                 JTextField usernameField = new JTextField(10);
                 JPasswordField passwordField = new JPasswordField(10);
                 JComboBox<String> roleCombo = new JComboBox<>(new String[]{"ADMINISTRATOR", "DOCTOR", "ASSISTANT", "PATIENT"});

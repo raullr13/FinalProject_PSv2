@@ -66,4 +66,40 @@ public class SqlUserDAO {
             return false;
         }
     }
+
+    public boolean updateUser(int id, String newUsername, String newPassword, String newRole, String newEmail) {
+        String query;
+        boolean updatePassword = (newPassword != null && !newPassword.trim().isEmpty());
+
+        if (updatePassword) {
+            query = "UPDATE Users SET username = ?, password = ?, role = ?, email = ? WHERE id = ?";
+        } else {
+            query = "UPDATE Users SET username = ?, role = ?, email = ? WHERE id = ?";
+        }
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, newUsername);
+
+            if (updatePassword) {
+                stmt.setString(2, newPassword);
+                stmt.setString(3, newRole);
+                stmt.setString(4, newEmail);
+                stmt.setInt(5, id);
+            } else {
+                stmt.setString(2, newRole);
+                stmt.setString(3, newEmail);
+                stmt.setInt(4, id);
+            }
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }

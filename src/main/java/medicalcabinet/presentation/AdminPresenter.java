@@ -106,4 +106,40 @@ public class AdminPresenter {
             view.showMessage("Select a user to delete.");
         }
     }
+
+    public void onUpdateUserClicked(String newUsername, String newPassword, String newRole, String newEmail) {
+        UserDTO selectedUser = view.getSelectedUser();
+
+        if (selectedUser == null) {
+            view.showMessage("Te rog să selectezi un utilizator din listă pentru a-l actualiza.");
+            return;
+        }
+
+        if (newUsername == null || newUsername.trim().isEmpty() ||
+                newEmail == null || newEmail.trim().isEmpty() ||
+                newRole == null || newRole.trim().isEmpty()) {
+            view.showMessage("Câmpurile username, rol și email sunt obligatorii!");
+            return;
+        }
+
+        boolean success = userDAO.updateUser(selectedUser.getId(), newUsername, newPassword, newRole, newEmail);
+
+        if (success) {
+            view.showMessage("Utilizatorul a fost actualizat cu succes!");
+            loadUsers();
+
+            medicalcabinet.services.UserNotificationManager notificationManager = new medicalcabinet.services.UserNotificationManager();
+
+            String changeDetails = "Username: " + newUsername + ", Rol: " + newRole;
+            if (newPassword != null && !newPassword.trim().isEmpty()) {
+                changeDetails += " (Parola a fost schimbată)";
+            }
+
+            notificationManager.notifyUserCredentialsChanged(newUsername, newEmail, changeDetails);
+
+        } else {
+            view.showMessage("Eroare la actualizarea utilizatorului în baza de date.");
+        }
+    }
+
 }
